@@ -102,12 +102,19 @@ def train(args):
     g = torch.Generator()
     g.manual_seed(args.seed)
 
+    create_folder('out-img')
+    create_folder('out-img/'+args.experiment_name)
+    create_folder('out-checkpoints')
+    create_folder('out-checkpoints/'+args.experiment_name)
+    create_folder('out-logs')
+    create_folder('out-logs/'+args.experiment_name)
+
     # Set the output format to print into the console and save into LOG file
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
-            logging.FileHandler(args.experiment_name + "_" + str(args.experimental_train_split).replace(".", "") + ".log")
+            logging.FileHandler('out-logs/'+args.experiment_name+'/'+args.experiment_name + "_" + str(args.experimental_train_split).replace(".", "") + ".log")
         ]
     )
 
@@ -309,7 +316,7 @@ def train(args):
         plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.05), ncol=4, fancybox=True, shadow=True, fontsize="xx-small")
         ax.grid()
 
-        fig.savefig("out-img/" + args.experiment_name + "_accuracy.png")
+        fig.savefig("out-img/"+ args.experiment_name+'/' + args.experiment_name + "_accuracy.png")
 
     # PLOT 1: Learning rate progress
     if args.plot_lr:
@@ -318,7 +325,7 @@ def train(args):
         ax1.set(xlabel="Epoch", ylabel="LR", title="")
         ax1.grid()
 
-        fig1.savefig("out-img/" + args.experiment_name + "_lr.png")
+        fig1.savefig("out-img/"+ args.experiment_name+'/'  + args.experiment_name + "_lr.png")
 
     print("\nAny desired statistics have been plotted.\nThe experiment is finished.")
     logging.info("\nAny desired statistics have been plotted.\nThe experiment is finished.")
