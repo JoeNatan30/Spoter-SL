@@ -24,7 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-
+import os
     
 def create_folder(directory):
     if not os.path.exists(directory):
@@ -214,7 +214,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
 
     create_folder('out-img')
     create_folder('out-img/'+experiment_name)
-    plt.savefig('out-img/'+experiment_name+'/'+experiment_name+'_distribution_labels.png', dpi=100)
+    plt.savefig('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_distribution_labels.png', dpi=100)
 
     # show the graph
     plt.show()
@@ -222,7 +222,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
 
     result_classification_report = classification_report(true_values, predicted_values,zero_division=0)
     
-    with open('out-img/'+experiment_name+'/'+experiment_name+'_classification_report.txt', 'w') as f:
+    with open('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_classification_report.txt', 'w') as f:
 
         f.write('*'*20)
         f.write('\n')    
@@ -267,7 +267,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     plt.figure(figsize = (25,20))
     sns.set(font_scale=1.4)#for label size
     sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 16}, fmt='.2g')# font size
-    plt.savefig('out-img/'+experiment_name+'/'+experiment_name+'_confusion_matrix_norm.png', dpi=100)
+    plt.savefig('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_confusion_matrix_norm.png', dpi=100)
 
 
     data = confusion_matrix(true_values, predicted_values)
@@ -283,7 +283,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     plt.figure(figsize = (25,20))
     sns.set(font_scale=1.4)#for label size
     sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 16}, fmt='.2g')# font size
-    plt.savefig('out-img/'+experiment_name+'/'+experiment_name+'_confusion_matrix.png', dpi=100)
+    plt.savefig('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_confusion_matrix.png', dpi=100)
 
     logging.info('evaluation completed!')
     logging.info('evaluation completed!')
