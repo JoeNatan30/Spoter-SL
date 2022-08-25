@@ -80,9 +80,16 @@ def get_default_args():
 
     return parser
 
-def create_folder(directory):
+def create_one_folder(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+        
+def create_folder(directory):
+    path = directory.split('/')
+    total_path =''
+    for i in path:
+        total_path = os.path.join(total_path,i)
+        create_one_folder(total_path)
 
 def train(args):
     
@@ -101,29 +108,6 @@ def train(args):
     torch.backends.cudnn.deterministic = True
     g = torch.Generator()
     g.manual_seed(args.seed)
-
-    create_folder('out-img')
-    create_folder('out-img/'+args.experiment_name)
-    create_folder('out-checkpoints')
-    create_folder('out-checkpoints/'+args.experiment_name)
-    create_folder('out-logs')
-    create_folder('out-logs/'+args.experiment_name)
-
-    # Set the output format to print into the console and save into LOG file
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler('out-logs/'+args.experiment_name+'/'+args.experiment_name + "_" + str(args.experimental_train_split).replace(".", "") + ".log")
-        ]
-    )
-
-    # Set device to CUDA only if applicable
-    device = torch.device("cpu")
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-
-    # Construct the model
     print('args.num_classes         :',args.num_classes)
     print('args.hidden_dim          :',args.hidden_dim)
     print('args.keypoints_model     :',args.keypoints_model)
@@ -143,6 +127,30 @@ def train(args):
     logging.info('args.testing_set_path    :'+str(args.testing_set_path))
     logging.info('args.epochs              :'+str(args.epochs))
     logging.info('args.lr                  :'+str(args.lr))
+
+    create_folder('out-img')
+    create_folder('out-img/'+args.experiment_name)
+    create_folder('out-checkpoints')
+    create_folder('out-checkpoints/'+args.experiment_name)
+    create_folder('out-logs')
+    create_folder('out-logs/'+args.experiment_name)
+
+    # Set the output format to print into the console and save into LOG file
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler('out-logs/'+args.experiment_name+'/'+args.experiment_name.split('/')[-1] + "_" + str(args.experimental_train_split).replace(".", "") + ".log")
+        ]
+    )
+
+    # Set device to CUDA only if applicable
+    device = torch.device("cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+
+    # Construct the model
+
 
     
     slrt_model = SPOTER(num_classes=args.num_classes, hidden_dim=args.hidden_dim)
@@ -302,7 +310,7 @@ def train(args):
         plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.05), ncol=4, fancybox=True, shadow=True, fontsize="xx-small")
         ax.grid()
 
-        fig.savefig("out-img/" + args.experiment_name + "_loss.png")
+        fig.savefig("out-img/" + args.experiment_name +'/'+args.experiment_name.split('/')[-1]+ "_loss.png")
     if args.plot_stats:
         fig, ax = plt.subplots()
         ax.plot(range(1, len(train_accs) + 1), train_accs, c="#00B09B", label="Training accuracy")
@@ -316,7 +324,7 @@ def train(args):
         plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.05), ncol=4, fancybox=True, shadow=True, fontsize="xx-small")
         ax.grid()
 
-        fig.savefig("out-img/"+ args.experiment_name+'/' + args.experiment_name + "_accuracy.png")
+        fig.savefig("out-img/"+ args.experiment_name+'/' + args.experiment_name.split('/')[-1] + "_accuracy.png")
 
     # PLOT 1: Learning rate progress
     if args.plot_lr:
@@ -325,7 +333,7 @@ def train(args):
         ax1.set(xlabel="Epoch", ylabel="LR", title="")
         ax1.grid()
 
-        fig1.savefig("out-img/"+ args.experiment_name+'/'  + args.experiment_name + "_lr.png")
+        fig1.savefig("out-img/"+ args.experiment_name+'/'  +args.experiment_name.split('/')[-1] + "_lr.png")
 
     print("\nAny desired statistics have been plotted.\nThe experiment is finished.")
     logging.info("\nAny desired statistics have been plotted.\nThe experiment is finished.")
