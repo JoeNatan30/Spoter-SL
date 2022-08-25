@@ -46,3 +46,7 @@ python train.py --experiment_name cris_wholepose_WLASL_lr_0.002 --training_set_p
 
 python train.py --experiment_name cris_wholepose_WLASL_lr_0.003 --training_set_path ../../joe/ConnectingPoints/split/WLASL--wholepose-Val.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/WLASL--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/WLASL--wholepose-Val.hdf5 --hidden_dim 142 --num_classes 101 --epochs 50 --keypoints_model wholepose --lr 0.003
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> main

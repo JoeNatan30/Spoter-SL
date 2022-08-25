@@ -133,7 +133,7 @@ class LSP_Dataset(Dataset):
     labels: [np.ndarray]  # type: ignore
 
     def __init__(self, dataset_filename: str,keypoints_model:str, num_labels=5, transform=None, augmentations=False,
-                 augmentations_prob=0.5, normalize=False,landmarks_ref= '../DATASETS/Mapeo landmarks librerias - Hoja 1.csv',
+                 augmentations_prob=0.5, normalize=False,landmarks_ref= 'Data/Mapeo landmarks librerias - Hoja 1.csv',
                 dict_labels_dataset=None,inv_dict_labels_dataset=None):
         """
         Initiates the HPOESDataset with the pre-loaded data from the h5 file.
