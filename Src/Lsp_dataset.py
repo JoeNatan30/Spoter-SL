@@ -16,8 +16,14 @@ def get_data_from_h5(path):
     hf = h5py.File(path, 'r')
     return hf
 
-def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,threshold_frecuency_labels=10,list_labels_banned=[]):
-
+def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,threshold_frecuency_labels=10,list_labels_banned=[],dict_labels_dataset=None,
+                         inv_dict_labels_dataset=None):
+    print('path                       :',path)
+    print('keypoints_model            :',keypoints_model)
+    print('landmarks_ref              :',landmarks_ref)
+    print('threshold_frecuency_labels :',threshold_frecuency_labels)
+    print('list_labels_banned         :',list_labels_banned)
+    
     index_array_column = None #'mp_indexInArray', 'wp_indexInArray','op_indexInArray'
 
     print('Use keypoint model : ',keypoints_model) 
@@ -73,13 +79,18 @@ def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,threshold_frecuency
     gc.collect()
     
     print('label encoding ...')
-    dict_labels_dataset = {}
-    inv_dict_labels_dataset = {}
+    
+    if dict_labels_dataset is None:
+        dict_labels_dataset = {}
+        inv_dict_labels_dataset = {}
 
-    for index,label in enumerate(set(labels_dataset)):
-        dict_labels_dataset[label] = index
-        inv_dict_labels_dataset[index] = label
-        
+        for index,label in enumerate(sorted(set(labels_dataset))):
+            dict_labels_dataset[label] = index
+            inv_dict_labels_dataset[index] = label
+    
+    print('sorted(set(labels_dataset))  : ',sorted(set(labels_dataset)))
+    print('dict_labels_dataset      :',dict_labels_dataset)
+    print('inv_dict_labels_dataset  :',inv_dict_labels_dataset)
     encoded_dataset = [dict_labels_dataset[label] for label in labels_dataset]
     
     print('label encoding completed!')
@@ -122,7 +133,8 @@ class LSP_Dataset(Dataset):
     labels: [np.ndarray]  # type: ignore
 
     def __init__(self, dataset_filename: str,keypoints_model:str, num_labels=5, transform=None, augmentations=False,
-                 augmentations_prob=0.5, normalize=False,landmarks_ref= '../DATASETS/Mapeo landmarks librerias - Hoja 1.csv'):
+                 augmentations_prob=0.5, normalize=False,landmarks_ref= '../DATASETS/Mapeo landmarks librerias - Hoja 1.csv',
+                dict_labels_dataset=None,inv_dict_labels_dataset=None):
         """
         Initiates the HPOESDataset with the pre-loaded data from the h5 file.
 
@@ -135,7 +147,9 @@ class LSP_Dataset(Dataset):
         video_dataset,labels_dataset,encoded_dataset,dict_labels_dataset,inv_dict_labels_dataset = get_dataset_from_hdf5(dataset_filename,keypoints_model,
                                                                                                                          landmarks_ref,
                                                                                          threshold_frecuency_labels =0,
-                                                                                         list_labels_banned =self.list_labels_banned)
+                                                                                         list_labels_banned =self.list_labels_banned,
+                                                                                        dict_labels_dataset=dict_labels_dataset,
+                                                                                         inv_dict_labels_dataset=inv_dict_labels_dataset)
 
         self.data = video_dataset
         self.labels = encoded_dataset
@@ -143,6 +157,9 @@ class LSP_Dataset(Dataset):
         self.text_labels = list(labels_dataset)
         self.num_labels = num_labels
         self.transform = transform
+        self.dict_labels_dataset = dict_labels_dataset
+        self.inv_dict_labels_dataset = inv_dict_labels_dataset
+        
 
         self.augmentations = augmentations
         self.augmentations_prob = augmentations_prob
