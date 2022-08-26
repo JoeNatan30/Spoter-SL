@@ -117,16 +117,6 @@ def train(args):
     print('args.testing_set_path    :',args.testing_set_path)
     print('args.epochs              :',args.epochs)
     print('args.lr                  :',args.lr)
-    
-    logging.info('args.num_classes         :'+str(args.num_classes))
-    logging.info('args.hidden_dim          :'+str(args.hidden_dim))
-    logging.info('args.keypoints_model     :'+str(args.keypoints_model))
-    logging.info('args.experiment_name     :'+str(args.experiment_name))
-    logging.info('args.training_set_path   :'+str(args.training_set_path))
-    logging.info('args.validation_set_path :'+str(args.validation_set_path))
-    logging.info('args.testing_set_path    :'+str(args.testing_set_path))
-    logging.info('args.epochs              :'+str(args.epochs))
-    logging.info('args.lr                  :'+str(args.lr))
 
     create_folder('out-img')
     create_folder('out-img/'+args.experiment_name)
@@ -143,6 +133,16 @@ def train(args):
             logging.FileHandler('out-logs/'+args.experiment_name+'/'+args.experiment_name.split('/')[-1] + "_" + str(args.experimental_train_split).replace(".", "") + ".log")
         ]
     )
+
+    logging.info('args.num_classes         :'+str(args.num_classes))
+    logging.info('args.hidden_dim          :'+str(args.hidden_dim))
+    logging.info('args.keypoints_model     :'+str(args.keypoints_model))
+    logging.info('args.experiment_name     :'+str(args.experiment_name))
+    logging.info('args.training_set_path   :'+str(args.training_set_path))
+    logging.info('args.validation_set_path :'+str(args.validation_set_path))
+    logging.info('args.testing_set_path    :'+str(args.testing_set_path))
+    logging.info('args.epochs              :'+str(args.epochs))
+    logging.info('args.lr                  :'+str(args.lr))
 
     # Set device to CUDA only if applicable
     device = torch.device("cpu")
@@ -180,7 +180,7 @@ def train(args):
     # Validation set
     if args.validation_set == "from-file":
         #val_set = CzechSLRDataset(args.validation_set_path)
-        val_set = LSP_Dataset(args.validation_set_path,args.keypoints_model, transform=transform, augmentations=False,
+        val_set = LSP_Dataset(args.validation_set_path,args.keypoints_model,
                              dict_labels_dataset=train_set.dict_labels_dataset,
                              inv_dict_labels_dataset = train_set.inv_dict_labels_dataset)
         val_loader = DataLoader(val_set, shuffle=True, generator=g)
@@ -198,7 +198,7 @@ def train(args):
     # Testing set
     if args.testing_set_path:
         #eval_set = CzechSLRDataset(args.testing_set_path)
-        eval_set = LSP_Dataset(args.testing_set_path,args.keypoints_model, transform=transform, augmentations=False,
+        eval_set = LSP_Dataset(args.testing_set_path,args.keypoints_model,
                              dict_labels_dataset=train_set.dict_labels_dataset,
                              inv_dict_labels_dataset = train_set.inv_dict_labels_dataset)
         eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
@@ -280,17 +280,19 @@ def train(args):
         for i in range(checkpoint_index):
             for checkpoint_id in ["t", "v"]:
                 # tested_model = VisionTransformer(dim=2, mlp_dim=108, num_classes=100, depth=12, heads=8)
-                tested_model = torch.load("out-checkpoints/" + args.experiment_name + "/checkpoint_" + checkpoint_id + "_" + str(i) + ".pth")
-                tested_model.train(False)
-                _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
+                try:
+                    tested_model = torch.load("out-checkpoints/" + args.experiment_name + "/checkpoint_" + checkpoint_id + "_" + str(i) + ".pth")
+                    tested_model.train(False)
+                    _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
 
-                if eval_acc > top_result:
-                    top_result = eval_acc
-                    top_result_name = "out-checkpoints/" + args.experiment_name + "/checkpoint_" + checkpoint_id + "_" + str(i)+ ".pth"
+                    if eval_acc > top_result:
+                        top_result = eval_acc
+                        top_result_name = "out-checkpoints/" + args.experiment_name + "/checkpoint_" + checkpoint_id + "_" + str(i)+ ".pth"
 
-                print("checkpoint_" + checkpoint_id + "_" + str(i) + "  ->  " + str(eval_acc))
-                logging.info("checkpoint_" + checkpoint_id + "_" + str(i) + "  ->  " + str(eval_acc))
-
+                    print("checkpoint_" + checkpoint_id + "_" + str(i) + "  ->  " + str(eval_acc))
+                    logging.info("checkpoint_" + checkpoint_id + "_" + str(i) + "  ->  " + str(eval_acc))
+                except:
+                    pass
         print("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
         logging.info("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
         

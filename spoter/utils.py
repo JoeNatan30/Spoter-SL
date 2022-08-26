@@ -182,8 +182,11 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     # set plot style: grey grid in the background:
     sns.set(style="darkgrid")
 
-    # set the figure size
-    plt.figure(figsize=(15, 8))
+    if 'WLASL' in experiment_name:
+        # set the figure size
+        plt.figure(figsize=(50, 40))
+    else:
+        plt.figure(figsize=(15, 8))
 
     # top bar -> sum all values(smoker=No and smoker=Yes) to find y position of the bars
     total = distribution_total.groupby('labels')['frecuencia'].sum().reset_index()
@@ -264,9 +267,16 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
 
     df_cm.index.name = 'Actual'
     df_cm.columns.name = 'Predicted'
-    plt.figure(figsize = (25,20))
+    
+
+    if 'WLASL' in experiment_name:
+        # set the figure size
+        plt.figure(figsize=(70, 70))
+    else:
+        plt.figure(figsize = (25,25))
+
     sns.set(font_scale=1.4)#for label size
-    sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 16}, fmt='.2g')# font size
+    sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 12}, fmt='.0%')# font size
     plt.savefig('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_confusion_matrix_norm.png', dpi=100)
 
 
@@ -280,9 +290,15 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
 
     df_cm.index.name = 'Actual'
     df_cm.columns.name = 'Predicted'
-    plt.figure(figsize = (25,20))
+
+    if 'WLASL' in experiment_name:
+        # set the figure size
+        plt.figure(figsize=(70, 70))
+    else:
+        plt.figure(figsize = (25,25))
+
     sns.set(font_scale=1.4)#for label size
-    sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 16}, fmt='.2g')# font size
+    sns.heatmap(df_cm, cmap="Blues", annot=True,annot_kws={"size": 12}, fmt='.2g')# font size
     plt.savefig('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_confusion_matrix.png', dpi=100)
 
     logging.info('evaluation completed!')
