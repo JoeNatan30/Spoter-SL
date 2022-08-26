@@ -7,6 +7,7 @@ python train.py --experiment_name tunning/AEC/cris_openpose_AEC_lr_0.0005 --trai
 
 python train.py --experiment_name tunning/AEC/cris_openpose_AEC_lr_0.001 --training_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5 --hidden_dim 142 --num_classes 28 --epochs 50 --keypoints_model openpose --lr 0.001
 
+
 python train.py --experiment_name tunning/AEC/cris_openpose_AEC_lr_0.002 --training_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5 --hidden_dim 142 --num_classes 28 --epochs 50 --keypoints_model openpose --lr 0.002
 
 python train.py --experiment_name tunning/AEC/cris_openpose_AEC_lr_0.003 --training_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/AEC--openpose-Val.hdf5 --hidden_dim 142 --num_classes 28 --epochs 50 --keypoints_model openpose --lr 0.003
