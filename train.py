@@ -21,6 +21,7 @@ from spoter.spoter_model import SPOTER
 from spoter.utils import train_epoch, evaluate, my_evaluate
 
 from spoter.gaussian_noise import GaussianNoise
+import json
 
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -177,6 +178,24 @@ def train(args):
     print('train_set',len(train_set.data))
     #print('train_set',train_set.data[0])
     print('train_set',train_set.data[0].shape)
+
+    #Save encoders
+    name = "out-img/" + args.experiment_name +'/'+args.experiment_name.split('/')[-1]+ "_dict_labels_dataset.json"
+    
+
+    with open(name, 'w') as f:
+        json.dump(train_set.dict_labels_dataset, f)
+    name = "out-img/" + args.experiment_name +'/'+args.experiment_name.split('/')[-1]+ "_inv_dict_labels_dataset.json"
+    with open(name, 'w') as f:
+        json.dump(train_set.inv_dict_labels_dataset, f)
+
+
+    print("Training dict encoder"+ "\n" +str(train_set.dict_labels_dataset)+ "\n")
+    logging.info("Training dict encoder"+ "\n" + str(train_set.dict_labels_dataset) + "\n")
+
+    print("Training inv dict decoder"+ "\n" +str(train_set.inv_dict_labels_dataset)+ "\n")
+    logging.info("Training inv dict decoder"+ "\n" + str(train_set.inv_dict_labels_dataset) + "\n")
+
     # Validation set
     if args.validation_set == "from-file":
         #val_set = CzechSLRDataset(args.validation_set_path)
@@ -194,6 +213,8 @@ def train(args):
 
     else:
         val_loader = None
+
+
 
     # Testing set
     if args.testing_set_path:
