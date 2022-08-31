@@ -200,7 +200,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     bar1 = sns.barplot(x="labels",  y="frecuencia", data=total, color='darkblue')
     for index, row in total.iterrows():
         bar1.text(index, row.frecuencia+2, round(row.frecuencia, 2), color='black', ha='center')
-        bar1.text(index, row.frecuencia-2, round(row.frecuencia-tipo_training['frecuencia'].iloc[index], 2), color='white', ha='center')
+        bar1.text(index, row.frecuencia-2, round(row.frecuencia-tipo_training['frecuencia'].iloc[index], 2), color='white', ha='center')  # type: ignore
 
 
     # bar chart 2 -> bottom bars (group of 'smoker=Yes')
