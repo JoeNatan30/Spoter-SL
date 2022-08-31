@@ -224,7 +224,13 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     train_true_values_unique = list(set(train_true_values))
 
     result_classification_report = classification_report(true_values, predicted_values,zero_division=0)
-    
+
+    dict_result_classification_report = classification_report(true_values, predicted_values,zero_division=0, output_dict=True)
+    df = pd.DataFrame(dict_result_classification_report).transpose()
+
+    df.to_csv('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_classification_report_dataframe.csv')
+
+
     with open('out-img/'+experiment_name+'/'+experiment_name.split('/')[-1]+'_classification_report.txt', 'w') as f:
 
         f.write('*'*20)
