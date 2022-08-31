@@ -38,7 +38,7 @@ def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,threshold_frecuency
     assert not index_array_column is None
 
     df_keypoints = pd.read_csv(landmarks_ref, skiprows=1)
-    df_keypoints = df_keypoints[(df_keypoints['Selected73']=='x' )& (df_keypoints['Key']!='wrist')]
+    df_keypoints = df_keypoints[(df_keypoints['Selected 29']=='x' )& (df_keypoints['Key']!='wrist')]
     idx_keypoints = sorted(df_keypoints[index_array_column].astype(int).values)
     name_keypoints = df_keypoints['Key'].values
     section_keypoints = (df_keypoints['Section']+'_'+df_keypoints['Key']).values
@@ -133,7 +133,7 @@ class LSP_Dataset(Dataset):
     labels: [np.ndarray]  # type: ignore
 
     def __init__(self, dataset_filename: str,keypoints_model:str, num_labels=5, transform=None, augmentations=False,
-                 augmentations_prob=0.5, normalize=False,landmarks_ref= 'Data/Mapeo landmarks librerias - Hoja 1.csv',
+                 augmentations_prob=0.5, normalize=False,landmarks_ref= 'Data/Mapeo landmarks librerias - Hoja 1_2.csv',
                 dict_labels_dataset=None,inv_dict_labels_dataset=None):
         """
         Initiates the HPOESDataset with the pre-loaded data from the h5 file.
