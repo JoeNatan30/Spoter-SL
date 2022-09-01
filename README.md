@@ -13,3 +13,9 @@ You can list all running tmux sessions using ‘tmux ls’. You can attach your 
 You can also kill a particular session using the following command:
 
     tmux kill-session -t ‘<name>’
+
+
+# Run model
+
+    
+    sh run_model_server.sh
