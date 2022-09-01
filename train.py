@@ -14,7 +14,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from pathlib import Path
 
-from utils import __balance_val_split, __split_of_train_sequence, __log_class_statistics
+from utils import __balance_val_split, __split_of_train_sequence  # type: ignore
 #from datasets.czech_slr_dataset import CzechSLRDataset
 from Src.Lsp_dataset import LSP_Dataset 
 from spoter.spoter_model import SPOTER

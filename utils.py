@@ -24,7 +24,7 @@ def __split_of_train_sequence(subset: Subset, train_split=1.0):
     if train_split == 1:
         return subset
 
-    targets = np.array([subset.dataset.targets[i] for i in subset.indices])
+    targets = np.array([subset.dataset.targets[i] for i in subset.indices])  # type: ignore
     train_indices, _ = train_test_split(
         np.arange(targets.shape[0]),
         test_size=1 - train_split,
@@ -37,5 +37,5 @@ def __split_of_train_sequence(subset: Subset, train_split=1.0):
 
 
 def __log_class_statistics(subset: Subset):
-    train_classes = [subset.dataset.targets[i] for i in subset.indices]
+    train_classes = [subset.dataset.targets[i] for i in subset.indices]  # type: ignore
     print(dict(Counter(train_classes)))
