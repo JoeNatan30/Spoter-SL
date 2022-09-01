@@ -55,7 +55,7 @@ class SPOTER(nn.Module):
 
         # Deactivate the initial attention decoder mechanism
         custom_decoder_layer = SPOTERTransformerDecoderLayer(self.transformer.d_model, self.transformer.nhead, 2048,
-                                                             0.1, "relu")
+                                                             0.5, "relu")
         self.transformer.decoder.layers = _get_clones(custom_decoder_layer, self.transformer.decoder.num_layers)
 
     def forward(self, inputs):
