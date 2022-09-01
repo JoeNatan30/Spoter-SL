@@ -38,8 +38,8 @@ def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,threshold_frecuency
     assert not index_array_column is None
 
     df_keypoints = pd.read_csv(landmarks_ref, skiprows=1)
-    df_keypoints = df_keypoints[(df_keypoints['Selected73']=='x' )& (df_keypoints['Key']!='wrist')]
-    #df_keypoints = df_keypoints[(df_keypoints['Selected 29']=='x' )& (df_keypoints['Key']!='wrist')]
+    #df_keypoints = df_keypoints[(df_keypoints['Selected73']=='x' )& (df_keypoints['Key']!='wrist')]
+    df_keypoints = df_keypoints[(df_keypoints['Selected 29']=='x' )& (df_keypoints['Key']!='wrist')]
 
     idx_keypoints = sorted(df_keypoints[index_array_column].astype(int).values)
     name_keypoints = df_keypoints['Key'].values
