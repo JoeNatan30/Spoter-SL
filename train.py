@@ -311,9 +311,10 @@ def train(args):
             top_train_acc, top_val_acc = 0, 0
             checkpoint_index_train += 1
             checkpoint_index_val += 1
-             print('checkpoint_index_train :',checkpoint_index_train)
+            print('checkpoint_index_train :',checkpoint_index_train)
             print('checkpoint_index_val   :',checkpoint_index_val)
-       lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
+            
+        lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
 
     # MARK: TESTING
 
