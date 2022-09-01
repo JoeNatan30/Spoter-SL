@@ -241,7 +241,8 @@ def train(args):
     losses, train_accs, val_accs = [], [], []
     lr_progress = []
     top_train_acc, top_val_acc = 0, 0
-    checkpoint_index = 0
+    checkpoint_index_train = 0
+    checkpoint_index_val   = 0
 
     if args.experimental_train_split:
         print("Starting " + args.experiment_name + "_" + str(args.experimental_train_split).replace(".", "") + "...\n\n")
@@ -266,22 +267,25 @@ def train(args):
         if args.save_checkpoints:
             if train_acc > top_train_acc:
                 print("[" + str(epoch + 1) + "] Train  acc top increase to : " + str(train_acc))
-                print("[" + str(epoch + 1) + "] Train  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index) + ".pth")
+                print("[" + str(epoch + 1) + "] Train  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index_train) + ".pth")
                 logging.info("[" + str(epoch + 1) + "] Train  acc top increase to : " + str(train_acc))
-                logging.info("[" + str(epoch + 1) + "] Train  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index) + ".pth")
+                logging.info("[" + str(epoch + 1) + "] Train  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index_train) + ".pth")
 
 
                 top_train_acc = train_acc
-                torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index) + ".pth")
+                torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index_train) + ".pth")
+                checkpoint_index_train += 1
 
             if val_acc > top_val_acc:
                 print("[" + str(epoch + 1) + "] Val  acc top increase to : " + str(val_acc))
-                print("[" + str(epoch + 1) + "] Val  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index) + ".pth")
+                print("[" + str(epoch + 1) + "] Val  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index_val) + ".pth")
                 logging.info("[" + str(epoch + 1) + "] Val  acc top increase to : " + str(val_acc))
-                logging.info("[" + str(epoch + 1) + "] Val  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index) + ".pth")
+                logging.info("[" + str(epoch + 1) + "] Val  acc top save in : " + "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index_val) + ".pth")
+
 
                 top_val_acc = val_acc
-                torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index) + ".pth")
+                torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index_val) + ".pth")
+                checkpoint_index_val +=1
 
         if epoch % args.log_freq == 0:
             print("[" + str(epoch + 1) + "] TRAIN  loss: " + str(train_loss.item() / len(train_loader)) + " acc: " + str(train_acc))
@@ -294,10 +298,12 @@ def train(args):
             print("")
             logging.info("")
 
-        # Reset the top accuracies on static subsets
+        # Reset the top accuracies on static subsets\
+        '''
         if epoch % 10 == 0:
             top_train_acc, top_val_acc = 0, 0
             checkpoint_index += 1
+        '''
 
         lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
 
@@ -309,8 +315,9 @@ def train(args):
     top_result, top_result_name = 0, ""
 
     if eval_loader:
-        for i in range(checkpoint_index+1):
-            for checkpoint_id in ["t", "v"]:
+        for checkpoint_id, checkpoint_index in [["t",checkpoint_index_train],["v",checkpoint_index_val]]:
+            #for checkpoint_id in ["t", "v"]:
+            for i in range(checkpoint_index):
                 # tested_model = VisionTransformer(dim=2, mlp_dim=108, num_classes=100, depth=12, heads=8)
                 try:
                     tested_model = torch.load("out-checkpoints/" + args.experiment_name + "/checkpoint_" + checkpoint_id + "_" + str(i) + ".pth")
@@ -331,6 +338,15 @@ def train(args):
         tested_model = torch.load(top_result_name)
         tested_model.train(False)
         my_evaluate(tested_model,train_set,train_loader,eval_loader,device,args.experiment_name,print_stats=True)
+        _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
+
+        print("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
+        logging.info("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
+
+        tested_model = torch.load(top_result_name)
+        tested_model.train(False)
+        my_evaluate(tested_model,train_set,train_loader,eval_loader,device,args.experiment_name,print_stats=True)
+        _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
 
 
     # PLOT 0: Performance (loss, accuracies) chart plotting
