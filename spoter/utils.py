@@ -158,6 +158,7 @@ def my_evaluate(model,train_set,train_loader,eval_loader,device,experiment_name,
     acc_total
     logging.info("accuracy     : "+str(acc_total))
     topk = ''
+    print('true_values_id uniques : ',len(set(true_values_id)))
     for k in range(1,6):
         value = 'k ='+str(k)+' top_k_accuracy_score = '+str(top_k_accuracy_score(true_values_id, predicted_values_proba, k=k))+'\n'
         topk += value

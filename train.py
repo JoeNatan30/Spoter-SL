@@ -40,7 +40,8 @@ def get_default_args():
     # Data
     parser.add_argument("--training_set_path", type=str, default="", help="Path to the training dataset CSV file")
     parser.add_argument("--keypoints_model", type=str, default="openpose", help="Path to the training dataset CSV file")
-    
+    parser.add_argument("--keypoints_number", type=int, default=29, help="Path to the training dataset CSV file")
+
     parser.add_argument("--testing_set_path", type=str, default="", help="Path to the testing dataset CSV file")
     parser.add_argument("--experimental_train_split", type=float, default=None,
                         help="Determines how big a portion of the training set should be employed (intended for the "
@@ -118,7 +119,7 @@ def train(args):
     print('args.testing_set_path    :',args.testing_set_path)
     print('args.epochs              :',args.epochs)
     print('args.lr                  :',args.lr)
-
+    print('args.keypoints_number    :',args.keypoints_number)
     create_folder('out-img')
     create_folder('out-img/'+args.experiment_name)
     create_folder('out-checkpoints')
@@ -144,6 +145,7 @@ def train(args):
     logging.info('args.testing_set_path    :'+str(args.testing_set_path))
     logging.info('args.epochs              :'+str(args.epochs))
     logging.info('args.lr                  :'+str(args.lr))
+    logging.info('args.keypoints_number    :'+str(args.keypoints_number))
 
     # Set device to CUDA only if applicable
     device = torch.device("cpu")
@@ -173,7 +175,7 @@ def train(args):
     # Training set
     transform = transforms.Compose([GaussianNoise(args.gaussian_mean, args.gaussian_std)])
     #train_set = CzechSLRDataset(args.training_set_path, transform=transform, augmentations=False)
-    train_set    = LSP_Dataset(args.training_set_path,args.keypoints_model, transform=transform, augmentations=False)
+    train_set    = LSP_Dataset(args.training_set_path,args.keypoints_model, transform=transform, augmentations=False,keypoints_number = args.keypoints_number)
 
     print('train_set',len(train_set.data))
     #print('train_set',train_set.data[0])
@@ -201,7 +203,7 @@ def train(args):
         #val_set = CzechSLRDataset(args.validation_set_path)
         val_set = LSP_Dataset(args.validation_set_path,args.keypoints_model,
                              dict_labels_dataset=train_set.dict_labels_dataset,
-                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset)
+                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = args.keypoints_number)
         val_loader = DataLoader(val_set, shuffle=True, generator=g)
 
     elif args.validation_set == "split-from-train":
@@ -221,7 +223,7 @@ def train(args):
         #eval_set = CzechSLRDataset(args.testing_set_path)
         eval_set = LSP_Dataset(args.testing_set_path,args.keypoints_model,
                              dict_labels_dataset=train_set.dict_labels_dataset,
-                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset)
+                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = args.keypoints_number)
         eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
 
     else:
@@ -313,7 +315,7 @@ def train(args):
             checkpoint_index_val += 1
             print('checkpoint_index_train :',checkpoint_index_train)
             print('checkpoint_index_val   :',checkpoint_index_val)
-            
+
         lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
 
     # MARK: TESTING
