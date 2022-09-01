@@ -263,6 +263,8 @@ def train(args):
             slrt_model.train(True)
             val_accs.append(val_acc)
 
+        print('checkpoint_index_train :',checkpoint_index_train)
+        print('checkpoint_index_val   :',checkpoint_index_val)
         # Save checkpoints if they are best in the current subset
         if args.save_checkpoints:
             if train_acc > top_train_acc:
@@ -274,7 +276,7 @@ def train(args):
 
                 top_train_acc = train_acc
                 torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_t_" + str(checkpoint_index_train) + ".pth")
-                checkpoint_index_train += 1
+                
 
             if val_acc > top_val_acc:
                 print("[" + str(epoch + 1) + "] Val  acc top increase to : " + str(val_acc))
@@ -285,7 +287,7 @@ def train(args):
 
                 top_val_acc = val_acc
                 torch.save(slrt_model, "out-checkpoints/" + args.experiment_name + "/checkpoint_v_" + str(checkpoint_index_val) + ".pth")
-                checkpoint_index_val +=1
+
 
         if epoch % args.log_freq == 0:
             print("[" + str(epoch + 1) + "] TRAIN  loss: " + str(train_loss.item() / len(train_loader)) + " acc: " + str(train_acc))
@@ -304,8 +306,14 @@ def train(args):
             top_train_acc, top_val_acc = 0, 0
             checkpoint_index += 1
         '''
-
-        lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
+        if epoch % 10 == 0:
+            print('clean top train acc  and update checkpoint id')
+            top_train_acc, top_val_acc = 0, 0
+            checkpoint_index_train += 1
+            checkpoint_index_val += 1
+             print('checkpoint_index_train :',checkpoint_index_train)
+            print('checkpoint_index_val   :',checkpoint_index_val)
+       lr_progress.append(sgd_optimizer.param_groups[0]["lr"])
 
     # MARK: TESTING
 
@@ -339,15 +347,6 @@ def train(args):
         tested_model.train(False)
         my_evaluate(tested_model,train_set,train_loader,eval_loader,device,args.experiment_name,print_stats=True)
         _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
-
-        print("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
-        logging.info("\nThe top result was recorded at " + str(top_result) + " testing accuracy. The best checkpoint is " + top_result_name)
-
-        tested_model = torch.load(top_result_name)
-        tested_model.train(False)
-        my_evaluate(tested_model,train_set,train_loader,eval_loader,device,args.experiment_name,print_stats=True)
-        _, _, eval_acc = evaluate(tested_model, eval_loader, device, print_stats=True)                
-
 
     # PLOT 0: Performance (loss, accuracies) chart plotting
     if args.plot_stats:
