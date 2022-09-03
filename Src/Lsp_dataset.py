@@ -71,7 +71,7 @@ def get_dataset_from_hdf5(path,keypoints_model,landmarks_ref,keypoints_number,th
 
         n_frames,n_axis,n_keypoints = data_video.shape
 
-        data_video = data_video.reshape((n_frames,n_keypoints,n_axis))
+        data_video = np.transpose(data_video, (0,2,1)) #transpose to n_frames, n_keypoints, n_axis 
         if index=='0':
             print('original size video : ',data_video.shape,'-- label : ',data_label)
             print('filtering by keypoints idx .. ')
