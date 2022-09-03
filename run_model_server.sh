@@ -8,7 +8,6 @@ python train.py --experiment_name expe29/AEC/cris_mediapipe_AEC_lr_0.001 --train
 
 python train.py --experiment_name expe71/PUCP/cris_wholepose_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5 --hidden_dim 142 --num_classes 29 --epochs 3 --keypoints_model wholepose --lr 0.0005 --keypoints_number 71
 python train.py --experiment_name expe29/PUCP/cris_wholepose_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5 --hidden_dim 58 --num_classes 29 --epochs 3 --keypoints_model wholepose --lr 0.0005 --keypoints_number 29
-
 '''
 
 ############################
@@ -28,8 +27,6 @@ python train.py --experiment_name final_baneado_71/PUCP/cris_openpose_PUCP_lr_0.
 python train.py --experiment_name final_baneado_29/PUCP/cris_wholepose_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5 --hidden_dim 58 --num_classes 29 --epochs 200 --keypoints_model wholepose --lr 0.0005 --keypoints_number 29
 python train.py --experiment_name final_baneado_29/PUCP/cris_mediapipe_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--mediapipe-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--mediapipe-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--mediapipe-Val.hdf5 --hidden_dim 58 --num_classes 29 --epochs 200 --keypoints_model mediapipe --lr 0.0005 --keypoints_number 29
 python train.py --experiment_name final_baneado_29/PUCP/cris_openpose_PUCP_lr_0.0005  --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--openpose-Train.hdf5  --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--openpose-Val.hdf5   --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--openpose-Val.hdf5  --hidden_dim 58 --num_classes 29 --epochs 200 --keypoints_model openpose  --lr 0.0005 --keypoints_number 29
-
-
 
 ############################
 python train.py --experiment_name final_baneado_71/AEC/cris_wholepose_AEC_lr_0.001 --training_set_path ../../joe/ConnectingPoints/split/AEC--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/AEC--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/AEC--wholepose-Val.hdf5 --hidden_dim 142 --num_classes 28 --epochs 200 --keypoints_model wholepose --lr 0.001  --keypoints_number 71
