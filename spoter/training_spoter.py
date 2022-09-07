@@ -15,6 +15,17 @@ from Src.Lsp_dataset import LSP_Dataset
 from utils import __balance_val_split, __split_of_train_sequence
 from spoter.utils import train_epoch, evaluate, my_evaluate, evaluate_top_k
 
+HIDDEN_DIM = {
+    "29": 58,
+    "71": 142
+}
+
+NUM_CLASSES = {
+    "AEC": 28,
+    "PUCP_PSL_DGI156": 29,
+    "WLASL": 86
+}
+
 class TrainingSpoter():
     def __init__(
         self,
@@ -33,8 +44,8 @@ class TrainingSpoter():
         n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
         print(f"Ncuda = {n_cuda}")
         self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
-        self.slrt_model = SPOTER(num_classes=self.config.num_classes, 
-                                hidden_dim=self.config.hidden_dim
+        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
                                 )
 
     def get_dataset(
@@ -156,6 +167,9 @@ class TrainingSpoter():
 
         train_loader, val_loader, eval_loader = self.get_dataset(path_save_weights)
 
+        max_eval_acc = 0
+        max_eval_acc_top5 = 0
+
         for epoch in tqdm(range(self.config.epochs)):
             train_loss, _, _, train_acc = train_epoch(self.slrt_model, train_loader, cel_criterion, sgd_optimizer, self.device)
 
@@ -184,13 +198,25 @@ class TrainingSpoter():
                 _, _, eval_acc = evaluate(self.slrt_model, eval_loader, self.device, print_stats=True)
                 _, _, eval_acctop5 = evaluate_top_k(self.slrt_model, eval_loader, self.device, k=5)
                 self.slrt_model.train(True)
+
+                if eval_acc > max_eval_acc:
+                    max_eval_acc = eval_acc
+                if eval_acctop5 > max_eval_acc_top5:
+                    max_eval_acc_top5 = eval_acctop5
+
                 metrics_log["eval_acc"] = eval_acc
                 metrics_log["eval_acctop5"] = eval_acctop5
+                metrics_log["max_eval_acc"] = max_eval_acc
+                metrics_log["max_eval_acc_top5"] = max_eval_acc_top5
 
                 print('Epoch [{}/{}], eval_acc: {:.4f}'.format(epoch +
                                                 1, self.config.epochs, eval_acc))
                 print('Epoch [{}/{}], eval_acctop5: {:.4f}'.format(epoch +
                                                 1, self.config.epochs, eval_acctop5))
+                print('Epoch [{}/{}], max_eval_acc: {:.4f}'.format(epoch +
+                                                1, self.config.epochs, max_eval_acc))
+                print('Epoch [{}/{}], max_eval_acc_top5: {:.4f}'.format(epoch +
+                                                1, self.config.epochs, max_eval_acc_top5))
                 
 
             if ((epoch+1) % int(self.config.epochs/self.config.num_backups)) == 0:

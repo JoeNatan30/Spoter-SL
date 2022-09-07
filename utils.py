@@ -113,6 +113,24 @@ def parse_arguments():
     return args
 
 
+def parse_arguments_automated():
+    ap = argparse.ArgumentParser()
+
+    #WANDB ARGUMENTS
+    ap.add_argument('-w', '--wandb', default=False, action='store_true',
+                    help="use weights and biases")
+    ap.add_argument('-n  ', '--no-wandb', dest='wandb', action='store_false',
+                    help="not use weights and biases")
+    ap.add_argument('-r', '--run_name', required=False, type=str, default=None,
+                    help="name of the execution to save in wandb")
+    ap.add_argument('-t', '--run_notes', required=False, type=str, default=None,
+                    help="notes of the execution to save in wandb")
+
+    args = ap.parse_args()
+
+    return args
+
+
 def parse_configuration(config_file):
     """Loads config file if a string was passed
         and returns the input if a dictionary was passed.
@@ -129,8 +147,8 @@ def configure_model(config_file, use_wandb):
     config_file = parse_configuration(config_file)
 
     config = dict(
-        hidden_dim = config_file["hparams"]["hidden_dim"],
-        num_classes = config_file["hparams"]["num_classes"],
+        #hidden_dim = config_file["hparams"]["hidden_dim"],
+        #num_classes = config_file["hparams"]["num_classes"],
         epochs = config_file["hparams"]["epochs"],
         num_backups = config_file["hparams"]["num_backups"],
         keypoints_model = config_file["hparams"]["keypoints_model"],
@@ -154,7 +172,8 @@ def configure_model(config_file, use_wandb):
         #testing_set_path = config_file["data"]["testing_set_path"],
 
         weights_trained = config_file["weights_trained"],
-        save_weights_path = config_file["save_weights_path"]
+        save_weights_path = config_file["save_weights_path"],
+        dataset = config_file["dataset"]
     )
 
     if not use_wandb:

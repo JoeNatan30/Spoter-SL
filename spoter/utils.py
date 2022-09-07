@@ -322,7 +322,7 @@ def evaluate_top_k(model, dataloader, device, k=5):
 
         outputs = model(inputs).expand(1, -1, -1)
 
-        if int(labels[0][0]) in torch.topk(outputs, k).indices.tolist():
+        if int(labels[0][0]) in torch.topk(torch.reshape(outputs, (-1,)), k).indices.tolist():
             pred_correct += 1
 
         pred_all += 1
