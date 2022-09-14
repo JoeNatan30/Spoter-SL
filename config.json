@@ -1,10 +1,10 @@
 {
     "hparams":{
-        "epochs": 2,
-        "num_backups": 2,
-        "keypoints_model": "wholepose",
-        "lr": 0.002,
-        "keypoints_number": 71,
+        "epochs": 363,
+        "num_backups": 10,
+        "keypoints_model": "openpose",
+        "lr": 0.0005,
+        "keypoints_number": 29,
 
         "experimental_train_split": null,
         "validation_set": "from-file",
@@ -20,5 +20,5 @@
     },
     "weights_trained": "weights_trained",
     "save_weights_path": "/data/shuaman/psl_gan/Data/landmarks",
-    "dataset": "PUCP_PSL_DGI156"
+    "dataset": "WLASL"
 }
