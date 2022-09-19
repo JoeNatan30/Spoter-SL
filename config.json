@@ -1,9 +1,9 @@
 {
     "hparams":{
-        "epochs": 363,
-        "num_backups": 10,
+        "epochs": 400,
+        "num_backups": 4,
         "keypoints_model": "openpose",
-        "lr": 0.0005,
+        "lr": 0.0001,
         "keypoints_number": 29,
 
         "experimental_train_split": null,

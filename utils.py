@@ -1,15 +1,20 @@
 
-import numpy as np
-
 from collections import Counter
 import random
 import os
 import argparse
 import json
 
+
+import numpy as np
 import torch
-from torch.utils.data import Subset
+from torchvision import transforms
+from spoter.gaussian_noise import GaussianNoise
+from torch.utils.data import Subset, DataLoader
 from sklearn.model_selection import train_test_split
+
+from Src.Lsp_dataset import LSP_Dataset
+
 
 
 def __balance_val_split(dataset, val_split=0.):
@@ -62,55 +67,120 @@ def set_seed(seed):
     os.environ["PYTHONHASHSEED"] = str(seed)
 
 
-def parse_arguments():
-    ap = argparse.ArgumentParser()
+def get_dataset_by_kpm(
+    config,
+    keypoints_model
+):
 
-    #WANDB ARGUMENTS
-    ap.add_argument('-w', '--wandb', default=False, action='store_true',
-                    help="use weights and biases")
-    ap.add_argument('-n  ', '--no-wandb', dest='wandb', action='store_false',
-                    help="not use weights and biases")
-    ap.add_argument('-r', '--run_name', required=False, type=str, default=None,
-                    help="name of the execution to save in wandb")
-    ap.add_argument('-t', '--run_notes', required=False, type=str, default=None,
-                    help="notes of the execution to save in wandb")
+    name_train_file = f"{config.dataset}--{keypoints_model}-Train.hdf5"
+    name_test_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
+    name_val_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
+    training_set_path = os.path.join(config.save_weights_path, name_train_file)
+    testing_set_path = os.path.join(config.save_weights_path, name_test_file)
+    validation_set_path = os.path.join(config.save_weights_path, name_val_file)
 
-    ap.add_argument("--training_set_path", type=str, default="", help="Path to the training dataset CSV file")
-    ap.add_argument("--testing_set_path", type=str, default="", help="Path to the testing dataset CSV file")
-    ap.add_argument("--validation_set_path", type=str, default="", help="Path to the validation dataset CSV file")
+    g = torch.Generator()
+    transform = transforms.Compose([GaussianNoise(config.gaussian_mean, config.gaussian_std)])
+    train_set = LSP_Dataset(training_set_path,
+                            keypoints_model, 
+                            transform=transform, 
+                            augmentations=False,
+                            keypoints_number=config.keypoints_number
+                            )
+
+    print('train_set',len(train_set.data))
+    print('train_set',train_set.data[0].shape)
+
+    print("Training dict encoder"+ "\n" +str(train_set.dict_labels_dataset)+ "\n")
+
+    print("Training inv dict decoder"+ "\n" +str(train_set.inv_dict_labels_dataset)+ "\n")
 
 
-    """
-    #TRAINING ARGUMENTS
-    ap.add_argument("--experimental_train_split", type=float, default=None,
-                        help="Determines how big a portion of the training set should be employed (intended for the "
-                             "gradually enlarging training set experiment from the paper)")
-    ap.add_argument("--validation_set", type=str, choices=["from-file", "split-from-train", "none"],
-                        default="from-file", help="Type of validation set construction. See README for further rederence")
-    ap.add_argument("--validation_set_size", type=float,
-                        help="Proportion of the training set to be split as validation set, if 'validation_size' is set"
-                             " to 'split-from-train'")
-    ap.add_argument("--log_freq", type=int, default=1,
-                        help="Log frequency (frequency of printing all the training info)")
-    ap.add_argument("--save_checkpoints", type=bool, default=True,
-                        help="Determines whether to save weights checkpoints")
-    ap.add_argument("--scheduler_factor", type=int, default=0.1, help="Factor for the ReduceLROnPlateau scheduler")
-    ap.add_argument("--scheduler_patience", type=int, default=5,
-                        help="Patience for the ReduceLROnPlateau scheduler")
-    ap.add_argument("--gaussian_mean", type=int, default=0, help="Mean parameter for Gaussian noise layer")
-    ap.add_argument("--gaussian_std", type=int, default=0.001,
-                        help="Standard deviation parameter for Gaussian noise layer")
-    ap.add_argument("--plot_stats", type=bool, default=True,
-                        help="Determines whether continuous statistics should be plotted at the end")
-    ap.add_argument("--plot_lr", type=bool, default=True,
-                        help="Determines whether the LR should be plotted at the end")
+    # Validation set
+    if config.validation_set == "from-file":
+        val_set = LSP_Dataset(validation_set_path, keypoints_model,
+                            dict_labels_dataset=train_set.dict_labels_dataset,
+                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config.keypoints_number)
+        val_loader = DataLoader(val_set, shuffle=True, generator=g)
 
-    """
+    elif config.validation_set == "split-from-train":
+        train_set, val_set = __balance_val_split(train_set, 0.2)
+
+        val_set.transform = None
+        val_set.augmentations = False
+        val_loader = DataLoader(val_set, shuffle=True, generator=g)
+
+    else:
+        val_loader = None
+
+    # Testing set
+    if testing_set_path:
+        #eval_set = CzechSLRDataset(testing_set_path)
+        eval_set = LSP_Dataset(testing_set_path,keypoints_model,
+                            dict_labels_dataset=train_set.dict_labels_dataset,
+                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config.keypoints_number)
+        eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
+
+    else:
+        eval_loader = None
+
+    # Final training set refinements
+    if config.experimental_train_split:
+        train_set = __split_of_train_sequence(train_set, config.experimental_train_split)
+
+    train_loader = DataLoader(train_set, shuffle=True, generator=g)
     
+    print('train_loader',len(train_loader))
 
-    args = ap.parse_args()
+    if config.experimental_train_split:
+        print("Starting " + config.weights_trained + "_" + str(config.experimental_train_split).replace(".", "") + "...\n\n")
+    else:
+        print("Starting " + config.weights_trained + "...\n\n")
 
-    return args
+    return train_loader, val_loader, eval_loader, train_set.dict_labels_dataset, train_set.inv_dict_labels_dataset
+
+
+
+def get_dataset(
+    config_json,
+    use_wandb
+):
+    config = type("configuration", (object,), config_json) if use_wandb else config_json
+
+    train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset_by_kpm(
+                                                                                            config,
+                                                                                            config.keypoints_model
+                                                                                        )
+
+    return train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset
+
+
+def get_datasets_by_dsname(
+    config_json,
+    use_wandb
+):
+    #config = config_json
+    config = type("configuration", (object,), config_json) if use_wandb else config_json
+
+    dict_train_loader = {}
+    dict_val_loader = {}
+    dict_eval_loader = {}
+    dict_dict_labels_dataset = {}
+    dict_inv_dict_labels_dataset = {}
+
+    for keypoints_model in ["openpose", "wholepose", "mediapipe"]:
+        train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset_by_kpm(
+                                                                                                config,
+                                                                                                keypoints_model
+                                                                                            )
+        dict_train_loader[keypoints_model] = train_loader
+        dict_val_loader[keypoints_model] = val_loader
+        dict_eval_loader[keypoints_model] = eval_loader
+        dict_dict_labels_dataset[keypoints_model] = dict_labels_dataset
+        dict_inv_dict_labels_dataset[keypoints_model] = inv_dict_labels_dataset
+
+    return dict_train_loader, dict_val_loader, dict_eval_loader, dict_dict_labels_dataset, dict_inv_dict_labels_dataset
+
 
 
 def parse_arguments_automated():
@@ -119,12 +189,16 @@ def parse_arguments_automated():
     #WANDB ARGUMENTS
     ap.add_argument('-w', '--wandb', default=False, action='store_true',
                     help="use weights and biases")
-    ap.add_argument('-n  ', '--no-wandb', dest='wandb', action='store_false',
+    ap.add_argument('-n', '--no-wandb', dest='wandb', action='store_false',
                     help="not use weights and biases")
-    ap.add_argument('-r', '--run_name', required=False, type=str, default=None,
-                    help="name of the execution to save in wandb")
-    ap.add_argument('-t', '--run_notes', required=False, type=str, default=None,
-                    help="notes of the execution to save in wandb")
+    ap.add_argument('-e', '--experimentation', default=False, action='store_true',
+                    help="train several experiments for each pose estimation library for some dataset")
+    ap.add_argument('-l', '--num_logs', required=False, default=5, type=int,
+                    help="if experimentation, num of logs of the experiment. Required in that case")
+    ap.add_argument('-r', '--exp_name', required=False, type=str, default=None,
+                    help="name of the execution to save")
+    ap.add_argument('-t', '--exp_notes', required=False, type=str, default=None,
+                    help="notes of the execution to save")
 
     args = ap.parse_args()
 

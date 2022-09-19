@@ -4,16 +4,11 @@ import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision import transforms
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 import wandb
 
 from spoter.spoter_model import SPOTER
-from spoter.gaussian_noise import GaussianNoise
-from Src.Lsp_dataset import LSP_Dataset
-from utils import __balance_val_split, __split_of_train_sequence
-from spoter.utils import train_epoch, evaluate, my_evaluate, evaluate_top_k
+from spoter.utils import train_epoch, evaluate, my_evaluate, evaluate_top_k, get_metrics_epoch_zero
 
 HIDDEN_DIM = {
     "29": 58,
@@ -30,128 +25,256 @@ class TrainingSpoter():
     def __init__(
         self,
         config,
-        training_set_path,
-        testing_set_path,
-        validation_set_path,
+        path_save_weights,
         use_wandb=True,
     ):
         print("Starting training ...")
         self.use_wandb = use_wandb
-        self.training_set_path = training_set_path
-        self.testing_set_path = testing_set_path
-        self.validation_set_path = validation_set_path
         self.config = config
         n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
         print(f"Ncuda = {n_cuda}")
         self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
-        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
-                                )
-
-    def get_dataset(
-        self,
-        path_save_weights
-    ):
-        g = torch.Generator()
-        transform = transforms.Compose([GaussianNoise(self.config.gaussian_mean, self.config.gaussian_std)])
-        train_set = LSP_Dataset(self.training_set_path,
-                                self.config.keypoints_model, 
-                                transform=transform, 
-                                augmentations=False,
-                                keypoints_number=self.config.keypoints_number
-                                )
-
-        print('train_set',len(train_set.data))
-        print('train_set',train_set.data[0].shape)
-
-        #TO-DO: Save Encoders
-        name_encoder = "dict_labels_dataset.json"
-        name_inv_encoder = "inv_dict_labels_dataset.json"
-        path_encoder = os.path.join(path_save_weights, name_encoder)
-        path_inv_encoder = os.path.join(path_save_weights, name_inv_encoder)
-        with open(path_encoder, 'w') as f:
-            json.dump(train_set.dict_labels_dataset, f)
-        with open(path_inv_encoder, 'w') as f:
-            json.dump(train_set.inv_dict_labels_dataset, f)
-
-        if self.use_wandb:
-            wandb.save(path_encoder)
-            wandb.save(path_inv_encoder)
-
-        print("Training dict encoder"+ "\n" +str(train_set.dict_labels_dataset)+ "\n")
-
-        print("Training inv dict decoder"+ "\n" +str(train_set.inv_dict_labels_dataset)+ "\n")
+        self.path_save_weights = path_save_weights
 
 
-        # Validation set
-        if self.config.validation_set == "from-file":
-            val_set = LSP_Dataset(self.validation_set_path,self.config.keypoints_model,
-                                dict_labels_dataset=train_set.dict_labels_dataset,
-                                inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = self.config.keypoints_number)
-            val_loader = DataLoader(val_set, shuffle=True, generator=g)
-
-        elif self.config.validation_set == "split-from-train":
-            train_set, val_set = __balance_val_split(train_set, 0.2)
-
-            val_set.transform = None
-            val_set.augmentations = False
-            val_loader = DataLoader(val_set, shuffle=True, generator=g)
-
-        else:
-            val_loader = None
-
-        # Testing set
-        if self.testing_set_path:
-            #eval_set = CzechSLRDataset(self.testing_set_path)
-            eval_set = LSP_Dataset(self.testing_set_path,self.config.keypoints_model,
-                                dict_labels_dataset=train_set.dict_labels_dataset,
-                                inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = self.config.keypoints_number)
-            eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
-
-        else:
-            eval_loader = None
-
-        # Final training set refinements
-        if self.config.experimental_train_split:
-            train_set = __split_of_train_sequence(train_set, self.config.experimental_train_split)
-
-        train_loader = DataLoader(train_set, shuffle=True, generator=g)
-        
-        print('train_loader',len(train_loader))
-
-        if self.config.experimental_train_split:
-            print("Starting " + self.config.weights_trained + "_" + str(self.config.experimental_train_split).replace(".", "") + "...\n\n")
-        else:
-            print("Starting " + self.config.weights_trained + "...\n\n")
-
-        return train_loader, val_loader, eval_loader
-
-
-    def save_weights(self, model, path_sub, use_wandb=True):
-
-        torch.save(model.state_dict(), os.path.join(path_sub, 'spoter-sl.pth'))
+    def save_weights(self, model, path_sub, keypoints_model, use_wandb=True):
+        name_file = 'spoter-sl.pth' if keypoints_model=="" else f'spoter-sl-{keypoints_model}.pth'
+        torch.save(model.state_dict(), os.path.join(path_sub, name_file))
 
         if use_wandb:
             wandb.save(os.path.join(path_sub, '*.pth'),
                     base_path='/'.join(path_sub.split('/')[:-2]))
 
 
-    def train(
-        self
+    def save_dict_labels_dataset(
+        self,
+        path_save_weights,
+        dict_labels_dataset,
+        inv_dict_labels_dataset,
+        keypoints_model
     ):
+        #TO-DO: Save Encoders
+        name_encoder = f"dict_labels_dataset_{self.config.dataset}_{keypoints_model}.json"
+        name_inv_encoder = f"inv_dict_labels_dataset_{self.config.dataset}_{keypoints_model}.json"
+        path_encoder = os.path.join(path_save_weights, name_encoder)
+        path_inv_encoder = os.path.join(path_save_weights, name_inv_encoder)
+        
+        with open(path_encoder, 'w') as f:
+            json.dump(dict_labels_dataset, f)
+        with open(path_inv_encoder, 'w') as f:
+            json.dump(inv_dict_labels_dataset, f)
+
+        if self.use_wandb:
+            wandb.save(path_encoder)
+            wandb.save(path_inv_encoder)
+
+
+    def train_epoch_metrics(
+        self,
+        slrt_model,
+        train_loader,
+        val_loader,
+        eval_loader,
+        cel_criterion,
+        sgd_optimizer,
+        epoch,
+        max_eval_acc,
+        max_eval_acc_top5,
+        keypoints_model=""
+    ):
+        slrt_model.train(True)
+        train_loss, _, _, train_acc = train_epoch(slrt_model, train_loader, cel_criterion, sgd_optimizer, self.device)
+        metrics_log = {"train_loss" if keypoints_model=="" else f"train_loss-{keypoints_model}": train_loss,
+                        "train_acc" if keypoints_model=="" else f"train_acc-{keypoints_model}": train_acc
+                    }
+        print(f"Training epoch {keypoints_model}:")
+        print('Epoch [{}/{}], train_loss: {:.4f}'.format(epoch +
+                                                        1, self.config.epochs, train_loss))
+        print('Epoch [{}/{}], train_acc: {:.4f}'.format(epoch +
+                                                        1, self.config.epochs, train_acc))
+        
+        if val_loader:
+            slrt_model.train(False)
+            _, _, val_acc = evaluate(slrt_model, val_loader, self.device)
+            slrt_model.train(True)
+            metrics_log["val_acc" if keypoints_model=="" else f"val_acc-{keypoints_model}"] = val_acc
+
+            print('Epoch [{}/{}], val_acc: {:.4f}'.format(epoch +
+                                            1, self.config.epochs, val_acc))
+
+        if eval_loader:
+            slrt_model.train(False)
+            _, _, eval_acc = evaluate(slrt_model, eval_loader, self.device, print_stats=True)
+            _, _, eval_acctop5 = evaluate_top_k(slrt_model, eval_loader, self.device, k=5)
+            slrt_model.train(True)
+
+            if eval_acc > max_eval_acc:
+                max_eval_acc = eval_acc
+            if eval_acctop5 > max_eval_acc_top5:
+                max_eval_acc_top5 = eval_acctop5
+
+            metrics_log["eval_acc" if keypoints_model=="" else f"eval_acc-{keypoints_model}"] = eval_acc
+            metrics_log["eval_acctop5" if keypoints_model=="" else f"eval_acctop5-{keypoints_model}"] = eval_acctop5
+            metrics_log["max_eval_acc" if keypoints_model=="" else f"max_eval_acc-{keypoints_model}"] = max_eval_acc
+            metrics_log["max_eval_acc_top5" if keypoints_model=="" else f"max_eval_acc_top5-{keypoints_model}"] = max_eval_acc_top5
+
+            print('Epoch [{}/{}], eval_acc: {:.4f}'.format(epoch +
+                                            1, self.config.epochs, eval_acc))
+            print('Epoch [{}/{}], eval_acctop5: {:.4f}'.format(epoch +
+                                            1, self.config.epochs, eval_acctop5))
+            print('Epoch [{}/{}], max_eval_acc: {:.4f}'.format(epoch +
+                                            1, self.config.epochs, max_eval_acc))
+            print('Epoch [{}/{}], max_eval_acc_top5: {:.4f}'.format(epoch +
+                                            1, self.config.epochs, max_eval_acc_top5))
+
+
+        if ((epoch+1) % int(self.config.epochs/self.config.num_backups)) == 0:
+            path_save_epoch = os.path.join(self.path_save_weights, 'epoch_{}'.format(epoch+1))
+            try:
+                os.mkdir(path_save_epoch)
+            except OSError:
+                pass
+            self.save_weights(slrt_model, path_save_epoch, keypoints_model, self.use_wandb)
+
+        return metrics_log, max_eval_acc, max_eval_acc_top5
+
+
+    def train_experiment(
+        self,
+        dict_train_loader,
+        dict_val_loader,
+        dict_eval_loader,
+        dict_dict_labels_dataset,
+        dict_inv_dict_labels_dataset    
+    ):
+        self.dict_train_loader = dict_train_loader
+        self.dict_val_loader = dict_val_loader
+        self.dict_eval_loader = dict_eval_loader
+        self.dict_dict_labels_dataset = dict_dict_labels_dataset
+        self.dict_inv_dict_labels_dataset = dict_inv_dict_labels_dataset
+
+
         if torch.cuda.is_available():
             print("Training in " + torch.cuda.get_device_name(0))  
         else:
             print("Training in CPU")
 
+        for keypoints_model in self.dict_dict_labels_dataset.keys():
+            print(keypoints_model)
+            self.save_dict_labels_dataset(self.path_save_weights,
+                                        self.dict_dict_labels_dataset[keypoints_model],
+                                        self.dict_inv_dict_labels_dataset[keypoints_model],
+                                        keypoints_model
+                                        )      
+          
+        self.slrt_model_op = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                )
+
+        self.slrt_model_wp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                )
+
+        self.slrt_model_mp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                )
+
+        self.slrt_model_wp.load_state_dict(self.slrt_model_op.state_dict())
+        self.slrt_model_mp.load_state_dict(self.slrt_model_op.state_dict())
+
+        dict_slrt_model = {
+            "openpose": self.slrt_model_op,
+            "wholepose": self.slrt_model_wp,
+            "mediapipe": self.slrt_model_mp
+        }
+
+        dict_criterion = {}
+        dict_sgd_optimizer = {}
+        dict_max_eval_acc = {}
+        dict_max_eval_acc_top5 = {}
+
+        for keypoints_model in self.dict_dict_labels_dataset.keys():
+            dict_slrt_model[keypoints_model].train(True)
+            dict_slrt_model[keypoints_model].to(self.device)
+
+            dict_criterion[keypoints_model] = nn.CrossEntropyLoss()
+            dict_sgd_optimizer[keypoints_model] = optim.SGD(dict_slrt_model[keypoints_model].parameters(), 
+                                                            lr=self.config.lr
+                                                            )
+            dict_max_eval_acc[keypoints_model] = 0
+            dict_max_eval_acc_top5[keypoints_model] = 0
+
+
+        metrics_log_epoch_zero = {"train_epoch": 0}
+        for keypoints_model in dict_slrt_model.keys():
+            metrics_log = get_metrics_epoch_zero(dict_slrt_model[keypoints_model], 
+                                                dict_train_loader[keypoints_model],
+                                                dict_val_loader[keypoints_model],
+                                                dict_eval_loader[keypoints_model],
+                                                dict_criterion[keypoints_model],
+                                                self.device,
+                                                keypoints_model=keypoints_model)
+            metrics_log_epoch_zero.update(metrics_log)
+
         if self.use_wandb:
-            path_save_weights = os.path.join(self.config.save_weights_path, wandb.run.id + "_" + self.config.weights_trained)
+            wandb.log(metrics_log_epoch_zero)
+
+        for epoch in tqdm(range(self.config.epochs)):
+            
+            metrics_log_epoch = {"train_epoch": epoch+1}
+            
+            for keypoints_model in dict_slrt_model.keys():
+                metrics_log, max_eval_acc_new, max_eval_acc_top5_new = self.train_epoch_metrics(dict_slrt_model[keypoints_model],
+                                        dict_train_loader[keypoints_model],
+                                        dict_val_loader[keypoints_model],
+                                        dict_eval_loader[keypoints_model],
+                                        dict_criterion[keypoints_model],
+                                        dict_sgd_optimizer[keypoints_model],
+                                        epoch,
+                                        dict_max_eval_acc[keypoints_model],
+                                        dict_max_eval_acc_top5[keypoints_model],
+                                        keypoints_model
+                                    )
+                dict_max_eval_acc[keypoints_model] = max_eval_acc_new
+                dict_max_eval_acc_top5[keypoints_model] = max_eval_acc_top5_new
+
+                metrics_log_epoch.update(metrics_log)
+            
+            if self.use_wandb:
+                wandb.log(metrics_log_epoch)
+
+        if self.use_wandb:
+            wandb.finish()
+
+
+    def train(
+        self,
+        train_loader,
+        val_loader,
+        eval_loader,
+        dict_labels_dataset,
+        inv_dict_labels_dataset
+    ):
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.eval_loader = eval_loader
+        self.dict_labels_dataset = dict_labels_dataset
+        self.inv_dict_labels_dataset = inv_dict_labels_dataset
+
+        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                )
+
+        if torch.cuda.is_available():
+            print("Training in " + torch.cuda.get_device_name(0))  
         else:
-            path_save_weights = os.path.join(self.config.save_weights_path, self.config.weights_trained)
-        try:
-            os.mkdir(path_save_weights)
-        except OSError:
-            pass
+            print("Training in CPU")
+
+        self.save_dict_labels_dataset(self.path_save_weights,
+                                    self.dict_labels_dataset,
+                                    self.inv_dict_labels_dataset,
+                                    self.config.keypoints_model
+                                    )
 
         self.slrt_model.train(True)
         self.slrt_model.to(self.device)
@@ -165,67 +288,26 @@ class TrainingSpoter():
                                                         patience=self.config.scheduler_patience
                                                         )
 
-        train_loader, val_loader, eval_loader = self.get_dataset(path_save_weights)
-
         max_eval_acc = 0
         max_eval_acc_top5 = 0
 
         for epoch in tqdm(range(self.config.epochs)):
-            train_loss, _, _, train_acc = train_epoch(self.slrt_model, train_loader, cel_criterion, sgd_optimizer, self.device)
 
-            metrics_log = {"train_epoch": epoch+1,
-                        "train_loss": train_loss,
-                        "train_acc": train_acc
-            }
-
-            print("Metrics")
-            print('Epoch [{}/{}], train_loss: {:.4f}'.format(epoch +
-                                                            1, self.config.epochs, train_loss))
-            print('Epoch [{}/{}], train_acc: {:.4f}'.format(epoch +
-                                                            1, self.config.epochs, train_acc))
-
-            if val_loader:
-                self.slrt_model.train(False)
-                _, _, val_acc = evaluate(self.slrt_model, val_loader, self.device)
-                self.slrt_model.train(True)
-                metrics_log["val_acc"] = val_acc
-
-                print('Epoch [{}/{}], val_acc: {:.4f}'.format(epoch +
-                                                1, self.config.epochs, val_acc))
-
-            if eval_loader:
-                self.slrt_model.train(False)
-                _, _, eval_acc = evaluate(self.slrt_model, eval_loader, self.device, print_stats=True)
-                _, _, eval_acctop5 = evaluate_top_k(self.slrt_model, eval_loader, self.device, k=5)
-                self.slrt_model.train(True)
-
-                if eval_acc > max_eval_acc:
-                    max_eval_acc = eval_acc
-                if eval_acctop5 > max_eval_acc_top5:
-                    max_eval_acc_top5 = eval_acctop5
-
-                metrics_log["eval_acc"] = eval_acc
-                metrics_log["eval_acctop5"] = eval_acctop5
-                metrics_log["max_eval_acc"] = max_eval_acc
-                metrics_log["max_eval_acc_top5"] = max_eval_acc_top5
-
-                print('Epoch [{}/{}], eval_acc: {:.4f}'.format(epoch +
-                                                1, self.config.epochs, eval_acc))
-                print('Epoch [{}/{}], eval_acctop5: {:.4f}'.format(epoch +
-                                                1, self.config.epochs, eval_acctop5))
-                print('Epoch [{}/{}], max_eval_acc: {:.4f}'.format(epoch +
-                                                1, self.config.epochs, max_eval_acc))
-                print('Epoch [{}/{}], max_eval_acc_top5: {:.4f}'.format(epoch +
-                                                1, self.config.epochs, max_eval_acc_top5))
-                
-
-            if ((epoch+1) % int(self.config.epochs/self.config.num_backups)) == 0:
-                path_save_epoch = os.path.join(path_save_weights, 'epoch_{}'.format(epoch+1))
-                try:
-                    os.mkdir(path_save_epoch)
-                except OSError:
-                    pass
-                self.save_weights(self.slrt_model, path_save_epoch, self.use_wandb)
+            metrics_log, max_eval_acc_new, max_eval_acc_top5_new = self.train_epoch_metrics(self.slrt_model,
+                                    self.train_loader,
+                                    self.val_loader,
+                                    self.eval_loader,
+                                    cel_criterion,
+                                    sgd_optimizer,
+                                    epoch,
+                                    max_eval_acc,
+                                    max_eval_acc_top5,
+                                    keypoints_model=""
+                                )
+            max_eval_acc = max_eval_acc_new
+            max_eval_acc_top5 = max_eval_acc_top5_new
+            
+            metrics_log["train_epoch"] = epoch + 1
 
             if self.use_wandb:
                 wandb.log(metrics_log)
