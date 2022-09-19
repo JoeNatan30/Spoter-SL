@@ -8,6 +8,9 @@ python train.py --experiment_name nuevo/expe29/AEC/cris_mediapipe_AEC_lr_0.001 -
 
 python train.py --experiment_name nuevo/expe71/PUCP/cris_wholepose_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5 --hidden_dim 142 --num_classes 29 --epochs 3 --keypoints_model wholepose --lr 0.0005 --keypoints_number 71
 python train.py --experiment_name nuevo/expe29/PUCP/cris_wholepose_PUCP_lr_0.0005 --training_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Train.hdf5 --validation_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5  --testing_set_path ../../joe/ConnectingPoints/split/PUCP_PSL_DGI156--wholepose-Val.hdf5 --hidden_dim 58 --num_classes 29 --epochs 3 --keypoints_model wholepose --lr 0.0005 --keypoints_number 29
+
+python3 train_wandb.py --training_set_path /data/shuaman/psl_gan/Data/landmarks/AEC--wholepose-Train.hdf5 --testing_set_path /data/shuaman/psl_gan/Data/landmarks/AEC--wholepose-Val.hdf5 --validation_set_path /data/shuaman/psl_gan/Data/landmarks/AEC--wholepose-Val.hdf5
+
 '''
 
 ############################

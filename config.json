@@ -1,0 +1,24 @@
+{
+    "hparams":{
+        "epochs": 400,
+        "num_backups": 4,
+        "keypoints_model": "openpose",
+        "lr": 0.0001,
+        "keypoints_number": 29,
+
+        "experimental_train_split": null,
+        "validation_set": "from-file",
+        "validation_set_size": null,
+        "log_freq": 1,
+        "save_checkpoints": true,
+        "scheduler_factor": 0.1,
+        "scheduler_patience": 5,
+        "gaussian_mean": 0,
+        "gaussian_std": 0.001,
+        "plot_stats": true,
+        "plot_lr": true
+    },
+    "weights_trained": "weights_trained",
+    "save_weights_path": "/data/shuaman/psl_gan/Data/landmarks",
+    "dataset": "WLASL"
+}
