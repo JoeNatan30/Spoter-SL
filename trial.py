@@ -1,4 +1,6 @@
 import os
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
 import json
 
 import torch
