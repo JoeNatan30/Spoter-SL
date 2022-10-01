@@ -10,6 +10,8 @@ CONFIG_FILENAME = "config.json"
 PROJECT_WANDB = "spoter-sl"
 ENTITY = "stevramos"
 
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
 def is_there_arg(args, master_arg):
     if(master_arg in args):
         return True
@@ -28,7 +30,7 @@ def parse_argument(args, master_arg):
 
 
 def train(config_file, use_wandb, exp_name, exp_notes, experimentation, num_logs):
-    set_seed(32)
+    set_seed(17)
     config = configure_model(config_file, use_wandb)
 
     if experimentation:

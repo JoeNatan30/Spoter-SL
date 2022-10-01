@@ -4,7 +4,7 @@
         "num_backups": 4,
         "keypoints_model": "openpose",
         "lr": 0.0001,
-        "keypoints_number": 29,
+        "keypoints_number": 71,
 
         "experimental_train_split": null,
         "validation_set": "from-file",
@@ -20,5 +20,5 @@
     },
     "weights_trained": "weights_trained",
     "save_weights_path": "/data/shuaman/psl_gan/Data/landmarks",
-    "dataset": "WLASL"
+    "dataset": "PUCP_PSL_DGI156"
 }

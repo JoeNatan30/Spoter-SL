@@ -21,6 +21,36 @@ NUM_CLASSES = {
     "WLASL": 86
 }
 
+
+def get_cuda_device():
+    multigpu = int(os.getenv("MULTI_GPU")) == 1 if os.getenv("MULTI_GPU") else 0
+
+    if multigpu:
+        print("Using multpgpu")
+        n_cuda = os.getenv("CUDA_VISIBLE_DEVICES") if os.getenv("CUDA_VISIBLE_DEVICES") else 0
+        print(f"Ncuda = {n_cuda}")
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(device)
+    else:
+        print("Using single gpu")
+        n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
+        print(f"Ncuda = {n_cuda}")
+
+        device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
+        print(device)
+
+    if torch.cuda.is_available():
+        print(f"Training in {torch.cuda.get_device_name(0)}" )  
+        print(f"Current cuda device {torch.cuda.current_device()}")
+        print(f"Number of devices {torch.cuda.device_count()}")
+        print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+        print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
+    else:
+        print("Training in CPU")
+
+    return multigpu, n_cuda, device
+
 class TrainingSpoter():
     def __init__(
         self,
@@ -31,9 +61,12 @@ class TrainingSpoter():
         print("Starting training ...")
         self.use_wandb = use_wandb
         self.config = config
-        n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
-        print(f"Ncuda = {n_cuda}")
-        self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
+        multigpu, n_cuda, self.device = get_cuda_device()
+        #n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
+        #n_cuda = os.getenv("CUDA_VISIBLE_DEVICES") if os.getenv("CUDA_VISIBLE_DEVICES") else 0
+        #print(f"Ncuda = {n_cuda}")
+        #self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
+        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.path_save_weights = path_save_weights
 
 
