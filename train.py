@@ -31,7 +31,7 @@ def parse_argument(args, master_arg):
 
 
 def train(config_file, use_wandb, exp_name, exp_notes, experimentation, num_logs):
-    set_seed(17)
+    set_seed(61)
     config = configure_model(config_file, use_wandb)
 
     if experimentation:
