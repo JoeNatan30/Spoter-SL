@@ -12,6 +12,7 @@ from spoter.utils import train_epoch, evaluate, my_evaluate, evaluate_top_k, get
 
 HIDDEN_DIM = {
     "29": 58,
+    "51": 102,
     "71": 142
 }
 
@@ -31,7 +32,7 @@ class TrainingSpoter():
         print("Starting training ...")
         self.use_wandb = use_wandb
         self.config = config
-        n_cuda = os.getenv('N_CUDA')if os.getenv('N_CUDA') else "0"
+        n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else config.device
         print(f"Ncuda = {n_cuda}")
         self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
         self.path_save_weights = path_save_weights
@@ -168,15 +169,27 @@ class TrainingSpoter():
                                         )      
           
         self.slrt_model_op = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
+                                dim_feedforward=self.config.dim_feedforward,
+                                num_encoder_layers=self.config.num_encoder_layers,
+                                num_decoder_layers=self.config.num_decoder_layers,
+                                nhead=self.config.nhead
                                 )
 
         self.slrt_model_wp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
+                                dim_feedforward=self.config.dim_feedforward,
+                                num_encoder_layers=self.config.num_encoder_layers,
+                                num_decoder_layers=self.config.num_decoder_layers,
+                                nhead=self.config.nhead
                                 )
 
         self.slrt_model_mp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
+                                dim_feedforward=self.config.dim_feedforward,
+                                num_encoder_layers=self.config.num_encoder_layers,
+                                num_decoder_layers=self.config.num_decoder_layers,
+                                nhead=self.config.nhead
                                 )
 
         self.slrt_model_wp.load_state_dict(self.slrt_model_op.state_dict())
@@ -261,14 +274,27 @@ class TrainingSpoter():
         self.dict_labels_dataset = dict_labels_dataset
         self.inv_dict_labels_dataset = inv_dict_labels_dataset
 
-        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)]
+        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset],
+                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
+                                dim_feedforward=self.config.dim_feedforward,
+                                num_encoder_layers=self.config.num_encoder_layers,
+                                num_decoder_layers=self.config.num_decoder_layers,
+                                nhead=self.config.nhead
                                 )
 
         if torch.cuda.is_available():
             print("Training in " + torch.cuda.get_device_name(0))  
         else:
             print("Training in CPU")
+
+        print("#"*50)
+        print("#"*30)
+        print("#"*10)
+        print("Num Trainable Params: ",sum(p.numel() for p in self.slrt_model.parameters() if p.requires_grad))
+        print("#"*10)
+        print("#"*30)
+        print("#"*50)
+
 
         self.save_dict_labels_dataset(self.path_save_weights,
                                     self.dict_labels_dataset,

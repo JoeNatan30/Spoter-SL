@@ -7,8 +7,8 @@ import os
 import wandb
 
 CONFIG_FILENAME = "config.json"
-PROJECT_WANDB = "spoter-sl"
-ENTITY = "stevramos"
+PROJECT_WANDB = "spoter"
+ENTITY = "joeNatan30"
 
 def is_there_arg(args, master_arg):
     if(master_arg in args):
