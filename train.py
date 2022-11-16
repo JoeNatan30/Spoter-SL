@@ -1,14 +1,17 @@
+import os
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
 import argparse
 from utils import parse_arguments_automated, set_seed, configure_model, get_dataset, get_datasets_by_dsname
 from spoter.training_spoter import TrainingSpoter
 from spoter.experimenter import ExperimenterSpoter
 import sys
-import os
 import wandb
 
 CONFIG_FILENAME = "config.json"
 PROJECT_WANDB = "spoter-sl"
 ENTITY = "stevramos"
+
 
 def is_there_arg(args, master_arg):
     if(master_arg in args):
@@ -28,7 +31,7 @@ def parse_argument(args, master_arg):
 
 
 def train(config_file, use_wandb, exp_name, exp_notes, experimentation, num_logs):
-    set_seed(32)
+    set_seed(61)
     config = configure_model(config_file, use_wandb)
 
     if experimentation:
