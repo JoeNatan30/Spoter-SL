@@ -2,9 +2,9 @@
     "hparams":{
         "epochs": 400,
         "num_backups": 4,
-        "keypoints_model": "openpose",
+        "keypoints_model": "wholepose",
         "lr": 0.0001,
-        "keypoints_number": 29,
+        "keypoints_number": 71,
 
         "nhead": 2,
         "num_encoder_layers":5,
