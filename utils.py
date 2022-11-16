@@ -75,9 +75,9 @@ def get_dataset_by_kpm(
     name_train_file = f"{config.dataset}--{keypoints_model}-Train.hdf5"
     name_test_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
     name_val_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
-    training_set_path = os.path.join(config.save_weights_path, name_train_file)
-    testing_set_path = os.path.join(config.save_weights_path, name_test_file)
-    validation_set_path = os.path.join(config.save_weights_path, name_val_file)
+    training_set_path = os.path.join(config.dataset_path, name_train_file)
+    testing_set_path = os.path.join(config.dataset_path, name_test_file)
+    validation_set_path = os.path.join(config.dataset_path, name_val_file)
 
     g = torch.Generator()
     transform = transforms.Compose([GaussianNoise(config.gaussian_mean, config.gaussian_std)])
@@ -229,6 +229,11 @@ def configure_model(config_file, use_wandb):
         lr = config_file["hparams"]["lr"],
         keypoints_number = config_file["hparams"]["keypoints_number"],
 
+        nhead = config_file["hparams"]["nhead"],
+        num_encoder_layers = config_file["hparams"]["num_encoder_layers"],
+        num_decoder_layers = config_file["hparams"]["num_decoder_layers"],
+        dim_feedforward = config_file["hparams"]["dim_feedforward"],
+
         experimental_train_split = config_file["hparams"]["experimental_train_split"],
         validation_set = config_file["hparams"]["validation_set"],
         validation_set_size = config_file["hparams"]["validation_set_size"],
@@ -245,6 +250,9 @@ def configure_model(config_file, use_wandb):
         #validation_set_path = config_file["data"]["validation_set_path"],
         #testing_set_path = config_file["data"]["testing_set_path"],
 
+        n_seed = config_file["seed"],
+        device = config_file["device"],
+        dataset_path = config_file["dataset_path"],
         weights_trained = config_file["weights_trained"],
         save_weights_path = config_file["save_weights_path"],
         dataset = config_file["dataset"]

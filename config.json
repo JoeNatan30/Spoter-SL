@@ -6,6 +6,11 @@
         "lr": 0.0001,
         "keypoints_number": 71,
 
+        "nhead": 2,
+        "num_encoder_layers":5,
+        "num_decoder_layers":5,
+        "dim_feedforward":128,
+
         "experimental_train_split": null,
         "validation_set": "from-file",
         "validation_set_size": null,
@@ -18,7 +23,12 @@
         "plot_stats": true,
         "plot_lr": true
     },
+
+    "seed":1,
+    "device":[0],
+    "dataset_path": "../ConnectingPoints/split",
+    
     "weights_trained": "weights_trained",
-    "save_weights_path": "/data/shuaman/psl_gan/Data/landmarks",
-    "dataset": "WLASL"
+    "save_weights_path": "./Weights",
+    "dataset": "AEC"
 }
