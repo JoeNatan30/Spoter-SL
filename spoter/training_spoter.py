@@ -19,7 +19,8 @@ HIDDEN_DIM = {
 NUM_CLASSES = {
     "AEC": 28,
     "PUCP_PSL_DGI156": 29,
-    "WLASL": 86
+    "WLASL": 86,
+    "AEC-DGI156-DGI305":72
 }
 
 class TrainingSpoter():
@@ -32,7 +33,7 @@ class TrainingSpoter():
         print("Starting training ...")
         self.use_wandb = use_wandb
         self.config = config
-        n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else config.device
+        n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else str(*config['device'])
         print(f"Ncuda = {n_cuda}")
         self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
         self.path_save_weights = path_save_weights
@@ -55,8 +56,8 @@ class TrainingSpoter():
         keypoints_model
     ):
         #TO-DO: Save Encoders
-        name_encoder = f"dict_labels_dataset_{self.config.dataset}_{keypoints_model}.json"
-        name_inv_encoder = f"inv_dict_labels_dataset_{self.config.dataset}_{keypoints_model}.json"
+        name_encoder = f"dict_labels_dataset_{self.config['dataset']}_{keypoints_model}.json"
+        name_inv_encoder = f"inv_dict_labels_dataset_{self.config['dataset']}_{keypoints_model}.json"
         path_encoder = os.path.join(path_save_weights, name_encoder)
         path_inv_encoder = os.path.join(path_save_weights, name_inv_encoder)
         
@@ -90,22 +91,22 @@ class TrainingSpoter():
                     }
         print(f"Training epoch {keypoints_model}:")
         print('Epoch [{}/{}], train_loss: {:.4f}'.format(epoch +
-                                                        1, self.config.epochs, train_loss))
+                                                        1, self.config['epochs'], train_loss))
         print('Epoch [{}/{}], train_acc: {:.4f}'.format(epoch +
-                                                        1, self.config.epochs, train_acc))
+                                                        1, self.config['epochs'], train_acc))
         
         if val_loader:
             slrt_model.train(False)
-            _, _, val_acc = evaluate(slrt_model, val_loader, self.device)
+            loss, _, _, val_acc = evaluate(slrt_model, val_loader, cel_criterion, self.device)
             slrt_model.train(True)
             metrics_log["val_acc" if keypoints_model=="" else f"val_acc-{keypoints_model}"] = val_acc
 
             print('Epoch [{}/{}], val_acc: {:.4f}'.format(epoch +
-                                            1, self.config.epochs, val_acc))
+                                            1, self.config['epochs'], val_acc))
 
         if eval_loader:
             slrt_model.train(False)
-            _, _, eval_acc = evaluate(slrt_model, eval_loader, self.device, print_stats=True)
+            eval_loss, _, _, eval_acc = evaluate(slrt_model, eval_loader, cel_criterion, self.device, print_stats=True)
             _, _, eval_acctop5 = evaluate_top_k(slrt_model, eval_loader, self.device, k=5)
             slrt_model.train(True)
 
@@ -114,22 +115,25 @@ class TrainingSpoter():
             if eval_acctop5 > max_eval_acc_top5:
                 max_eval_acc_top5 = eval_acctop5
 
+            metrics_log['eval_loss' if keypoints_model=="" else f"eval_acc-{keypoints_model}"] = eval_loss
             metrics_log["eval_acc" if keypoints_model=="" else f"eval_acc-{keypoints_model}"] = eval_acc
             metrics_log["eval_acctop5" if keypoints_model=="" else f"eval_acctop5-{keypoints_model}"] = eval_acctop5
             metrics_log["max_eval_acc" if keypoints_model=="" else f"max_eval_acc-{keypoints_model}"] = max_eval_acc
             metrics_log["max_eval_acc_top5" if keypoints_model=="" else f"max_eval_acc_top5-{keypoints_model}"] = max_eval_acc_top5
 
+            print('Epoch [{}/{}], eval_loss: {:.4f}'.format(epoch +
+                                                        1, self.config['epochs'], eval_loss))
             print('Epoch [{}/{}], eval_acc: {:.4f}'.format(epoch +
-                                            1, self.config.epochs, eval_acc))
+                                            1, self.config['epochs'], eval_acc))
             print('Epoch [{}/{}], eval_acctop5: {:.4f}'.format(epoch +
-                                            1, self.config.epochs, eval_acctop5))
+                                            1, self.config['epochs'], eval_acctop5))
             print('Epoch [{}/{}], max_eval_acc: {:.4f}'.format(epoch +
-                                            1, self.config.epochs, max_eval_acc))
+                                            1, self.config['epochs'], max_eval_acc))
             print('Epoch [{}/{}], max_eval_acc_top5: {:.4f}'.format(epoch +
-                                            1, self.config.epochs, max_eval_acc_top5))
+                                            1, self.config['epochs'], max_eval_acc_top5))
 
 
-        if ((epoch+1) % int(self.config.epochs/self.config.num_backups)) == 0:
+        if ((epoch+1) % int(self.config['epochs']/self.config['num_backups'])) == 0:
             path_save_epoch = os.path.join(self.path_save_weights, 'epoch_{}'.format(epoch+1))
             try:
                 os.mkdir(path_save_epoch)
@@ -168,28 +172,28 @@ class TrainingSpoter():
                                         keypoints_model
                                         )      
           
-        self.slrt_model_op = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
-                                dim_feedforward=self.config.dim_feedforward,
-                                num_encoder_layers=self.config.num_encoder_layers,
-                                num_decoder_layers=self.config.num_decoder_layers,
-                                nhead=self.config.nhead
+        self.slrt_model_op = SPOTER(num_classes=NUM_CLASSES[self.config['dataset']], 
+                                hidden_dim=HIDDEN_DIM[str(self.config['keypoints_number'])],
+                                dim_feedforward=self.config['dim_feedforward'],
+                                num_encoder_layers=self.config['num_encoder_layers'],
+                                num_decoder_layers=self.config['num_decoder_layers'],
+                                nhead=self.config['nhead']
                                 )
 
-        self.slrt_model_wp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
-                                dim_feedforward=self.config.dim_feedforward,
-                                num_encoder_layers=self.config.num_encoder_layers,
-                                num_decoder_layers=self.config.num_decoder_layers,
-                                nhead=self.config.nhead
+        self.slrt_model_wp = SPOTER(num_classes=NUM_CLASSES[self.config['dataset']], 
+                                hidden_dim=HIDDEN_DIM[str(self.config['keypoints_number'])],
+                                dim_feedforward=self.config['dim_feedforward'],
+                                num_encoder_layers=self.config['num_encoder_layers'],
+                                num_decoder_layers=self.config['num_decoder_layers'],
+                                nhead=self.config['nhead']
                                 )
 
-        self.slrt_model_mp = SPOTER(num_classes=NUM_CLASSES[self.config.dataset], 
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
-                                dim_feedforward=self.config.dim_feedforward,
-                                num_encoder_layers=self.config.num_encoder_layers,
-                                num_decoder_layers=self.config.num_decoder_layers,
-                                nhead=self.config.nhead
+        self.slrt_model_mp = SPOTER(num_classes=NUM_CLASSES[self.config['dataset']], 
+                                hidden_dim=HIDDEN_DIM[str(self.config['keypoints_number'])],
+                            dim_feedforward=self.config['dim_feedforward'],
+                                num_encoder_layers=self.config['num_encoder_layers'],
+                                num_decoder_layers=self.config['num_decoder_layers'],
+                                nhead=self.config['nhead']
                                 )
 
         self.slrt_model_wp.load_state_dict(self.slrt_model_op.state_dict())
@@ -212,7 +216,7 @@ class TrainingSpoter():
 
             dict_criterion[keypoints_model] = nn.CrossEntropyLoss()
             dict_sgd_optimizer[keypoints_model] = optim.SGD(dict_slrt_model[keypoints_model].parameters(), 
-                                                            lr=self.config.lr
+                                                            lr=self.config['lr']
                                                             )
             dict_max_eval_acc[keypoints_model] = 0
             dict_max_eval_acc_top5[keypoints_model] = 0
@@ -232,7 +236,7 @@ class TrainingSpoter():
         if self.use_wandb:
             wandb.log(metrics_log_epoch_zero)
 
-        for epoch in tqdm(range(self.config.epochs)):
+        for epoch in tqdm(range(self.config['epochs'])):
             
             metrics_log_epoch = {"train_epoch": epoch+1}
             
@@ -274,13 +278,15 @@ class TrainingSpoter():
         self.dict_labels_dataset = dict_labels_dataset
         self.inv_dict_labels_dataset = inv_dict_labels_dataset
 
-        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config.dataset],
-                                hidden_dim=HIDDEN_DIM[str(self.config.keypoints_number)],
-                                dim_feedforward=self.config.dim_feedforward,
-                                num_encoder_layers=self.config.num_encoder_layers,
-                                num_decoder_layers=self.config.num_decoder_layers,
-                                nhead=self.config.nhead
+        self.slrt_model = SPOTER(num_classes=NUM_CLASSES[self.config['dataset']],
+                                hidden_dim=HIDDEN_DIM[str(self.config['keypoints_number'])],
+                                dim_feedforward=self.config['dim_feedforward'],
+                                num_encoder_layers=self.config['num_encoder_layers'],
+                                num_decoder_layers=self.config['num_decoder_layers'],
+                                nhead=self.config['nhead']
                                 )
+
+        print(self.slrt_model)
 
         if torch.cuda.is_available():
             print("Training in " + torch.cuda.get_device_name(0))  
@@ -299,7 +305,7 @@ class TrainingSpoter():
         self.save_dict_labels_dataset(self.path_save_weights,
                                     self.dict_labels_dataset,
                                     self.inv_dict_labels_dataset,
-                                    self.config.keypoints_model
+                                    self.config['keypoints_model']
                                     )
 
         self.slrt_model.train(True)
@@ -307,17 +313,17 @@ class TrainingSpoter():
 
         cel_criterion = nn.CrossEntropyLoss()
         sgd_optimizer = optim.SGD(self.slrt_model.parameters(), 
-                                    lr=self.config.lr
+                                    lr=self.config['lr']
                                     )
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(sgd_optimizer, 
-                                                        factor=self.config.scheduler_factor, 
-                                                        patience=self.config.scheduler_patience
+                                                        factor=self.config['scheduler_factor'], 
+                                                        patience=self.config['scheduler_patience']
                                                         )
 
         max_eval_acc = 0
         max_eval_acc_top5 = 0
 
-        for epoch in tqdm(range(self.config.epochs)):
+        for epoch in tqdm(range(self.config['epochs'])):
 
             metrics_log, max_eval_acc_new, max_eval_acc_top5_new = self.train_epoch_metrics(self.slrt_model,
                                     self.train_loader,

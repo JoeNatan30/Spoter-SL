@@ -72,20 +72,20 @@ def get_dataset_by_kpm(
     keypoints_model
 ):
 
-    name_train_file = f"{config.dataset}--{keypoints_model}-Train.hdf5"
-    name_test_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
-    name_val_file = f"{config.dataset}--{keypoints_model}-Val.hdf5"
-    training_set_path = os.path.join(config.dataset_path, name_train_file)
-    testing_set_path = os.path.join(config.dataset_path, name_test_file)
-    validation_set_path = os.path.join(config.dataset_path, name_val_file)
+    name_train_file = f"{config['dataset']}--{keypoints_model}-Train.hdf5"
+    name_test_file = f"{config['dataset']}--{keypoints_model}-Val.hdf5"
+    name_val_file = f"{config['dataset']}--{keypoints_model}-Val.hdf5"
+    training_set_path = os.path.join(config['dataset_path'], name_train_file)
+    testing_set_path = os.path.join(config['dataset_path'], name_test_file)
+    validation_set_path = os.path.join(config['dataset_path'], name_val_file)
 
     g = torch.Generator()
-    transform = transforms.Compose([GaussianNoise(config.gaussian_mean, config.gaussian_std)])
+    transform = transforms.Compose([GaussianNoise(config['gaussian_mean'], config['gaussian_std'])])
     train_set = LSP_Dataset(training_set_path,
                             keypoints_model, 
                             transform=transform, 
                             augmentations=False,
-                            keypoints_number=config.keypoints_number
+                            keypoints_number=config['keypoints_number']
                             )
 
     print('train_set',len(train_set.data))
@@ -97,13 +97,13 @@ def get_dataset_by_kpm(
 
 
     # Validation set
-    if config.validation_set == "from-file":
+    if config['validation_set'] == "from-file":
         val_set = LSP_Dataset(validation_set_path, keypoints_model,
                             dict_labels_dataset=train_set.dict_labels_dataset,
-                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config.keypoints_number)
+                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config['keypoints_number'])
         val_loader = DataLoader(val_set, shuffle=True, generator=g)
 
-    elif config.validation_set == "split-from-train":
+    elif config['validation_set'] == "split-from-train":
         train_set, val_set = __balance_val_split(train_set, 0.2)
 
         val_set.transform = None
@@ -118,24 +118,24 @@ def get_dataset_by_kpm(
         #eval_set = CzechSLRDataset(testing_set_path)
         eval_set = LSP_Dataset(testing_set_path,keypoints_model,
                             dict_labels_dataset=train_set.dict_labels_dataset,
-                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config.keypoints_number)
+                            inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config['keypoints_number'])
         eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
 
     else:
         eval_loader = None
 
     # Final training set refinements
-    if config.experimental_train_split:
-        train_set = __split_of_train_sequence(train_set, config.experimental_train_split)
+    if config['experimental_train_split']:
+        train_set = __split_of_train_sequence(train_set, config['experimental_train_split'])
 
     train_loader = DataLoader(train_set, shuffle=True, generator=g)
     
     print('train_loader',len(train_loader))
 
-    if config.experimental_train_split:
-        print("Starting " + config.weights_trained + "_" + str(config.experimental_train_split).replace(".", "") + "...\n\n")
+    if config['experimental_train_split']:
+        print("Starting " + config['weights_trained'] + "_" + str(config['experimental_train_split']).replace(".", "") + "...\n\n")
     else:
-        print("Starting " + config.weights_trained + "...\n\n")
+        print("Starting " + config['weights_trained'] + "...\n\n")
 
     return train_loader, val_loader, eval_loader, train_set.dict_labels_dataset, train_set.inv_dict_labels_dataset
 
@@ -149,7 +149,7 @@ def get_dataset(
 
     train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset_by_kpm(
                                                                                             config,
-                                                                                            config.keypoints_model
+                                                                                            config['keypoints_model']
                                                                                         )
 
     return train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset
@@ -200,6 +200,26 @@ def parse_arguments_automated():
     ap.add_argument('-t', '--exp_notes', required=False, type=str, default=None,
                     help="notes of the execution to save")
 
+    ap.add_argument('-ep', '--epoch', required=False, type=int, default=None,
+                    help="number of epoch")
+    ap.add_argument('-lr', '--learning_rate', required=False, type=float, default=None,
+                    help="learning rate for transformer model")
+    ap.add_argument('-kn', '--keypoints_number', required=False, type=int, default=None,
+                    help="number of keypoints taken from the csv of points position")
+    ap.add_argument('-ncl', '--num_coder_layers', required=False, type=int, default=None,
+                    help="learning rate for transformer model")
+    ap.add_argument('-df', '--dim_feedforward', required=False, type=int, default=None,
+                    help="number of feedfoward dimention of the transformer model")
+    ap.add_argument('-dv', '--device', required=False, type=str, nargs='+', default=None,
+                    help="select just one of the GPU('s)")
+    ap.add_argument('-s', '--seed', required=False, type=int, default=None,
+                    help="seed for the model")
+    ap.add_argument('-ds', '--dataset', required=False, type=str, default=None,
+                    help="name of the dataset")
+    ap.add_argument('-km', '--keypoints_model', required=False, type=str, default=None,
+                    help="name of the keypoint estimation model")
+                         
+
     args = ap.parse_args()
 
     return args
@@ -216,23 +236,23 @@ def parse_configuration(config_file):
         return config_file
 
 
-def configure_model(config_file, use_wandb):
+def configure_model(config_file, use_wandb, arg):
 
     config_file = parse_configuration(config_file)
 
     config = dict(
         #hidden_dim = config_file["hparams"]["hidden_dim"],
         #num_classes = config_file["hparams"]["num_classes"],
-        epochs = config_file["hparams"]["epochs"],
+        epochs = arg.epoch if arg.epoch else config_file["hparams"]["epochs"],
         num_backups = config_file["hparams"]["num_backups"],
-        keypoints_model = config_file["hparams"]["keypoints_model"],
-        lr = config_file["hparams"]["lr"],
-        keypoints_number = config_file["hparams"]["keypoints_number"],
+        keypoints_model = arg.keypoints_model if arg.keypoints_model else config_file["hparams"]["keypoints_model"],
+        lr = arg.learning_rate if arg.learning_rate else config_file["hparams"]["lr"],
+        keypoints_number = arg.keypoints_number if arg.keypoints_number else config_file["hparams"]["keypoints_number"],
 
         nhead = config_file["hparams"]["nhead"],
-        num_encoder_layers = config_file["hparams"]["num_encoder_layers"],
-        num_decoder_layers = config_file["hparams"]["num_decoder_layers"],
-        dim_feedforward = config_file["hparams"]["dim_feedforward"],
+        num_encoder_layers = arg.num_coder_layers if arg.num_coder_layers else config_file["hparams"]["num_encoder_layers"],
+        num_decoder_layers = arg.num_coder_layers if arg.num_coder_layers else config_file["hparams"]["num_decoder_layers"],
+        dim_feedforward = arg.dim_feedforward if arg.dim_feedforward else config_file["hparams"]["dim_feedforward"],
 
         experimental_train_split = config_file["hparams"]["experimental_train_split"],
         validation_set = config_file["hparams"]["validation_set"],
@@ -250,15 +270,15 @@ def configure_model(config_file, use_wandb):
         #validation_set_path = config_file["data"]["validation_set_path"],
         #testing_set_path = config_file["data"]["testing_set_path"],
 
-        n_seed = config_file["seed"],
-        device = config_file["device"],
+        n_seed = arg.seed if arg.seed else config_file["seed"],
+        device = arg.device if arg.device else config_file["device"],
         dataset_path = config_file["dataset_path"],
         weights_trained = config_file["weights_trained"],
         save_weights_path = config_file["save_weights_path"],
-        dataset = config_file["dataset"]
+        dataset = arg.dataset if arg.dataset else config_file["dataset"]
     )
 
-    if not use_wandb:
-        config = type("configuration", (object,), config)
+    #if not use_wandb:
+    #    config = type("configuration", (object,), config)
 
     return config

@@ -27,9 +27,20 @@ def parse_argument(args, master_arg):
         print("Something went wrong when loading the parameters, Kindly check input carefully!!!")
 
 
-def train(config_file, use_wandb, exp_name, exp_notes, experimentation, num_logs):
-    set_seed(32)
-    config = configure_model(config_file, use_wandb)
+def train(config_file, arg, use_wandb, exp_name, exp_notes, experimentation, num_logs):
+    
+    config = configure_model(config_file, use_wandb, arg)
+    set_seed(config['n_seed'])
+    
+    exp_name = '/'.join([f'{k}-{v}' for k,v in config.items() if k=='epochs' or \
+                                                                 k=='keypoints_model' or \
+                                                                 k=='lr' or \
+                                                                 k=='keypoints_number' or \
+                                                                 k=='dataset' or \
+                                                                 k=='num_encoder_layers' or \
+                                                                 k=='dim_feedforward' or \
+                                                                 k=='n_seed'])
+
 
     if experimentation:
         print("Training some experiments to numerical experimentation ...")
@@ -59,9 +70,9 @@ def train(config_file, use_wandb, exp_name, exp_notes, experimentation, num_logs
             wandb.init(project=PROJECT_WANDB, entity=ENTITY, config=config, name=exp_name, notes=exp_notes)
             config = wandb.config
             wandb.watch_called = False
-            path_save_weights = os.path.join(config.save_weights_path, wandb.run.id + "_" + config.weights_trained)
+            path_save_weights = os.path.join(config['save_weights_path'], wandb.run.id + "_" + config['weights_trained'])
         else:
-            path_save_weights = os.path.join(config.save_weights_path, config.weights_trained)
+            path_save_weights = os.path.join(config['save_weights_path'], config['weights_trained'])
         try:
             os.mkdir(path_save_weights)
         except OSError:
@@ -98,7 +109,7 @@ if __name__ == '__main__':
         experimentation = parse_argument(sys.argv, '--experimentation')
         num_logs = parse_argument(sys.argv, '--num_logs')
 
-    train(CONFIG_FILENAME, use_wandb=use_wandb, 
+    train(CONFIG_FILENAME,args, use_wandb=use_wandb, 
         exp_name=exp_name, exp_notes=exp_notes,
         experimentation=experimentation, num_logs=num_logs
         )

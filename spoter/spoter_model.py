@@ -48,10 +48,13 @@ class SPOTER(nn.Module):
         super().__init__()
         print('hidden_dim',hidden_dim)
         print('num_decoder_layers',num_decoder_layers,'<--------------------')
+       
         self.row_embed = nn.Parameter(torch.rand(50, hidden_dim))
+        print(self.row_embed.shape)
+        print(nn.Parameter(torch.cat([self.row_embed[0].unsqueeze(0).repeat(1, 1, 1)], dim=-1).flatten(0, 1).unsqueeze(0)).shape)
         self.pos = nn.Parameter(torch.cat([self.row_embed[0].unsqueeze(0).repeat(1, 1, 1)], dim=-1).flatten(0, 1).unsqueeze(0))
         self.class_query = nn.Parameter(torch.rand(1, hidden_dim))
-        self.transformer = nn.Transformer(hidden_dim, nhead=nhead, num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers)
+        self.transformer = nn.Transformer(hidden_dim, nhead=nhead, num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=dim_feedforward )
         self.linear_class = nn.Linear(hidden_dim, num_classes)
 
         # Deactivate the initial attention decoder mechanism
