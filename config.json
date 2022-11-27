@@ -1,15 +1,15 @@
 {
     "hparams":{
-        "epochs": 400,
+        "epochs": 3000,
         "num_backups": 4,
-        "keypoints_model": "openpose",
-        "lr": 0.0001,
+        "keypoints_model": "mediapipe",
+        "lr": 0.0005,
         "keypoints_number": 29,
 
         "nhead": 2,
-        "num_encoder_layers":5,
-        "num_decoder_layers":5,
-        "dim_feedforward":128,
+        "num_encoder_layers":3,
+        "num_decoder_layers":3,
+        "dim_feedforward":8,
 
         "experimental_train_split": null,
         "validation_set": "from-file",
@@ -24,11 +24,11 @@
         "plot_lr": true
     },
 
-    "seed":1,
+    "seed": 1,
     "device":[0],
     "dataset_path": "../ConnectingPoints/split",
     
     "weights_trained": "weights_trained",
     "save_weights_path": "./Weights",
-    "dataset": "AEC"
+    "dataset": "AEC-DGI156-DGI305"
 }
