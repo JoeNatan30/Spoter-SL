@@ -142,10 +142,10 @@ def get_dataset_by_kpm(
 
 
 def get_dataset(
-    config_json,
+    config,
     use_wandb
 ):
-    config = type("configuration", (object,), config_json) if use_wandb else config_json
+    #config = type("configuration", (object,), config_json) if use_wandb else config_json
 
     train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset_by_kpm(
                                                                                             config,
@@ -278,7 +278,6 @@ def configure_model(config_file, use_wandb, arg):
         dataset = arg.dataset if arg.dataset else config_file["dataset"]
     )
 
-    #if not use_wandb:
-    #    config = type("configuration", (object,), config)
-
+   
+    print(config['keypoints_model'])
     return config
