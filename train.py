@@ -70,7 +70,7 @@ def train(config_file, arg, use_wandb, exp_name, exp_notes, experimentation, num
         train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset(config, use_wandb)
     
         if use_wandb:
-            wandb.init(project=PROJECT_WANDB, entity=ENTITY, config=config, name=exp_name, notes=exp_notes)
+            wandb.init(project=PROJECT_WANDB, entity=ENTITY, config=config, name=exp_name, notes=exp_notes, tags=['5-per-red','cleaned','feed-mean-mirrorFix'])
             config = wandb.config
             wandb.watch_called = False
             path_save_weights = os.path.join(config['save_weights_path'], wandb.run.id + "_" + config['weights_trained'])

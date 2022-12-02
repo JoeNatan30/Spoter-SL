@@ -1,7 +1,8 @@
 *.swp
 *.log
 
-Weights/weights_trained/
+Weights/
+*.txt
 
 out-checkpoints/
 out-img/

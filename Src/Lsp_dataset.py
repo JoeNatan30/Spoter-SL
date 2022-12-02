@@ -11,6 +11,7 @@ from collections import Counter
 import torch.utils.data as torch_data
 from torch.utils.data import Dataset
 import logging
+import random
 
 def get_data_from_h5(path):
     hf = h5py.File(path, 'r')
@@ -201,7 +202,18 @@ class LSP_Dataset(Dataset):
         """
         depth_map = torch.from_numpy(np.copy(self.data[idx]))
         label = torch.Tensor([self.labels[idx]])
-        depth_map = depth_map - 0.5
+
+        #depth_map = depth_map - 0.5
+        depth_map = torch.moveaxis(depth_map,2,0)
+
+        if random.random() > 0.5:
+            depth_map[0,:,:] = torch.neg(depth_map[0,:,:])
+
+        depth_map[0,:,:] = depth_map[0,:,:] - depth_map[0,:,0].mean(axis=0)
+        depth_map[1,:,:] = depth_map[1,:,:] - depth_map[1,:,0].mean(axis=0)
+        
+        depth_map = torch.moveaxis(depth_map,0,2)
+        
         if self.transform:
             depth_map = self.transform(depth_map)
         return depth_map, label
