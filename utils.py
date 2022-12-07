@@ -66,6 +66,18 @@ def set_seed(seed):
         torch.backends.cudnn.benchmark = False
     os.environ["PYTHONHASHSEED"] = str(seed)
 
+def lsp_collate_fn(data):
+    # TODO: Implement your function
+    # But I guess in your case it should be:
+    labels = []
+    inputs = []
+
+    for unique_data in data:
+        inputs.append(unique_data['predictors'])
+        labels.append(unique_data['targets'])
+    #return tuple(data)
+    return inputs, labels
+
 
 def get_dataset_by_kpm(
     config,
@@ -101,14 +113,14 @@ def get_dataset_by_kpm(
         val_set = LSP_Dataset(validation_set_path, keypoints_model,
                             dict_labels_dataset=train_set.dict_labels_dataset,
                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config['keypoints_number'])
-        val_loader = DataLoader(val_set, shuffle=True, generator=g)
+        val_loader = DataLoader(val_set, batch_size=8, collate_fn=lsp_collate_fn, shuffle=True, generator=g)
 
     elif config['validation_set'] == "split-from-train":
         train_set, val_set = __balance_val_split(train_set, 0.2)
 
         val_set.transform = None
         val_set.augmentations = False
-        val_loader = DataLoader(val_set, shuffle=True, generator=g)
+        val_loader = DataLoader(val_set, batch_size=8, collate_fn=lsp_collate_fn, shuffle=True, generator=g)
 
     else:
         val_loader = None
@@ -119,7 +131,7 @@ def get_dataset_by_kpm(
         eval_set = LSP_Dataset(testing_set_path,keypoints_model,
                             dict_labels_dataset=train_set.dict_labels_dataset,
                             inv_dict_labels_dataset = train_set.inv_dict_labels_dataset,keypoints_number = config['keypoints_number'])
-        eval_loader = DataLoader(eval_set, shuffle=True, generator=g)
+        eval_loader = DataLoader(eval_set, batch_size=8, collate_fn=lsp_collate_fn, shuffle=True, generator=g)
 
     else:
         eval_loader = None
@@ -128,7 +140,7 @@ def get_dataset_by_kpm(
     if config['experimental_train_split']:
         train_set = __split_of_train_sequence(train_set, config['experimental_train_split'])
 
-    train_loader = DataLoader(train_set, shuffle=True, generator=g)
+    train_loader = DataLoader(train_set, batch_size=8, collate_fn=lsp_collate_fn, shuffle=True, generator=g)
     
     print('train_loader',len(train_loader))
 
@@ -151,6 +163,8 @@ def get_dataset(
                                                                                             config,
                                                                                             config['keypoints_model']
                                                                                         )
+
+
 
     return train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset
 

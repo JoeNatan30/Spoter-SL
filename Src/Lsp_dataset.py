@@ -201,10 +201,17 @@ class LSP_Dataset(Dataset):
         """
         depth_map = torch.from_numpy(np.copy(self.data[idx]))
         label = torch.Tensor([self.labels[idx]])
+
         depth_map = depth_map - 0.5
+        
         if self.transform:
             depth_map = self.transform(depth_map)
-        return depth_map, label
+
+        sample = {
+            'predictors': depth_map,
+            'targets': label}
+
+        return sample
 
     def __len__(self):
         return len(self.labels)

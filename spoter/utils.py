@@ -73,8 +73,16 @@ def train_epoch(model, dataloader, criterion, optimizer, device, scheduler=None)
     pred_correct, pred_all = 0, 0
     running_loss = 0.0
 
-    for i, data in enumerate(dataloader):
+    for i,  data in enumerate(dataloader):
+
+
         inputs, labels = data
+
+        inputs = torch.stack(inputs)
+        labels = torch.stack(labels)
+        print(inputs.shape(), inputs.size())
+        print(labels.shape(), labels.size())
+
         inputs = inputs.squeeze(0).to(device)
         labels = labels.to(device, dtype=torch.long)
 
