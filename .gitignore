@@ -1,6 +1,10 @@
 *.swp
 *.log
 
+Weights/
+*.txt
+#Weights/weights_trained/
+
 out-checkpoints/
 out-img/
 out-logs/
@@ -134,3 +138,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+wandb/
+*.log
