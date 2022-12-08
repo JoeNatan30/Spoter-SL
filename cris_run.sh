@@ -1,0 +1,3 @@
+nohup python train.py --wandb --epoch 3000 --learning_rate 0.0005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model mediapipe > log_AEC_29_mediapipe.txt &
+nohup python train.py --wandb --epoch 3000 --learning_rate 0.0005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model wholepose > log_AEC_29_wholepose.txt &
+nohup python train.py --wandb --epoch 3000 --learning_rate 0.0005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model openpose > log_AEC_29_openpose.txt &

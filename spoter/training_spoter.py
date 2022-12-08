@@ -162,6 +162,7 @@ class TrainingSpoter():
             print('Epoch [{}/{}], max_eval_acc_top5: {:.4f}'.format(epoch +
                                             1, self.config['epochs'], max_eval_acc_top5))
 
+        print("self.config['num_backups']",self.config['num_backups'])
 
         if ((epoch+1) % int(self.config['epochs']/self.config['num_backups'])) == 0:
             path_save_epoch = os.path.join(self.path_save_weights, 'epoch_{}'.format(epoch+1))
