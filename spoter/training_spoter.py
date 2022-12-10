@@ -163,8 +163,10 @@ class TrainingSpoter():
                                             1, self.config['epochs'], max_eval_acc_top5))
 
         print("self.config['num_backups']",self.config['num_backups'])
-
-        if ((epoch+1) % int(self.config['epochs']/self.config['num_backups'])) == 0:
+        print("self.config['epochs']",self.config['epochs'])
+        print("(epoch+1)",(epoch+1))
+        print("self.config['epochs']/self.config['num_backups']+1",self.config['epochs']/self.config['num_backups']+1)
+        if ((epoch+1) % int(self.config['epochs']/self.config['num_backups']+1)) == 0:
             path_save_epoch = os.path.join(self.path_save_weights, 'epoch_{}'.format(epoch+1))
             try:
                 os.mkdir(path_save_epoch)
