@@ -63,10 +63,15 @@ class TrainingSpoter():
         print("Starting training ...")
         self.use_wandb = use_wandb
         self.config = config
-        n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else str(*config['device'])
-        print(f"Ncuda = {n_cuda}")
-        self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
+        
+        #n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else str(*config['device'])
+        #print(f"Ncuda = {n_cuda}")
+        #self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
+        multigpu, n_cuda, device = get_cuda_device()
+        self.device = device
+        
         self.path_save_weights = path_save_weights
+        
 
 
     def save_weights(self, model, path_sub, keypoints_model, use_wandb=True):

@@ -1,9 +1,19 @@
+'''
 # AEC-29
-#nohup python train.py --wandb --epoch 7000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model mediapipe > log_AEC_29_00005_mediapipe.txt &
-#nohup python train.py --wandb --epoch 7000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model wholepose > log_AEC_29_00005_wholepose.txt &
-#nohup python train.py --wandb --epoch 7000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model openpose > log_AEC_29_00005_openpose.txt &
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model mediapipe > log_AEC_29_00005_mediapipe.txt &
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model wholepose > log_AEC_29_00005_wholepose.txt &
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset AEC --keypoints_model openpose > log_AEC_29_00005_openpose.txt &
 
 # AEC-71
-nohup python train.py --wandb --epoch 10000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model mediapipe > log_AEC_71_00005-mediapipe.txt & 
-nohup python train.py --wandb --epoch 10000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model wholepose > log_AEC_71_00005-wholepose.txt &
-nohup python train.py --wandb --epoch 10000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model openpose > log_AEC_71_00005-openpose.txt &
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model mediapipe > log_AEC_71_00005-mediapipe.txt & 
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model wholepose > log_AEC_71_00005-wholepose.txt &
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 15000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 8 --device 0 --seed 1 --dataset AEC --keypoints_model openpose > log_AEC_71_00005-openpose.txt &
+'''
+
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 2 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model mediapipe > log_PUCP_29_00005-mediapipe.txt & 
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 2 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model wholepose > log_PUCP_29_00005-wholepose.txt & 
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=0 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 29 --num_coder_layers 2 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model openpose  > log_PUCP_29_00005-openpose.txt & 
+
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model mediapipe > log_PUCP_71_00005-mediapipe.txt & 
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model wholepose > log_PUCP_71_00005-wholepose.txt & 
+MULTI_GPU=1 CUDA_VISIBLE_DEVICES=1 nohup python train.py --wandb --epoch 20000 --learning_rate 0.00005 --keypoints_number 71 --num_coder_layers 1 --dim_feedforward 32 --device 0 --seed 1 --dataset PUCP_PSL_DGI156 --keypoints_model openpose  > log_PUCP_71_00005-openpose.txt & 

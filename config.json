@@ -25,7 +25,7 @@
     },
 
     "seed": 1,
-    "device":[0],
+    "device":[0,1],
     "dataset_path": "../DATASETS",
     
     "weights_trained": "weights_trained",
