@@ -1,6 +1,6 @@
 import os
 import json
-
+import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -59,11 +59,18 @@ class TrainingSpoter():
         config,
         path_save_weights,
         use_wandb=True,
+        run = None,
+        
     ):
         print("Starting training ...")
         self.use_wandb = use_wandb
         self.config = config
+        self.run = run
         
+        self.artifact_name = self.config['dataset']+'-'+str(self.config['keypoints_number'])+'-'+str(self.config['keypoints_model'])+'-'+str(self.run.id)+'-'+'model' 
+        print("artifact_name : ",self.artifact_name)    
+        self.model_artifact = wandb.Artifact(self.artifact_name, type='model')
+
         #n_cuda = os.getenv('N_CUDA') if os.getenv('N_CUDA') else str(*config['device'])
         #print(f"Ncuda = {n_cuda}")
         #self.device = torch.device("cuda:" + (n_cuda) if torch.cuda.is_available() else "cpu")
@@ -82,6 +89,15 @@ class TrainingSpoter():
         if use_wandb:
             wandb.save(os.path.join(path_sub, '*.pth'),
                     base_path='/'.join(path_sub.split('/')[:-2]))
+            
+            #if self.run !=None:
+            #    print("log artifact wandb  : ",os.path.join(path_sub, name_file))
+            #    self.model_artifact_test = wandb.Artifact(self.artifact_name+'_test', type='model')
+
+            #    self.model_artifact_test.add_file(os.path.join(path_sub, name_file))
+            #    self.run.log_artifact(self.model_artifact_test)
+
+
 
 
     def save_dict_labels_dataset(
@@ -383,26 +399,47 @@ class TrainingSpoter():
         max_eval_acc = 0
         max_eval_acc_top5 = 0
 
-        for epoch in tqdm(range(self.config['epochs'])):
+        try:
+            for epoch in tqdm(range(self.config['epochs'])):
 
-            metrics_log, max_eval_acc_new, max_eval_acc_top5_new = self.train_epoch_metrics(self.slrt_model,
-                                    self.train_loader,
-                                    self.val_loader,
-                                    self.eval_loader,
-                                    cel_criterion,
-                                    sgd_optimizer,
-                                    epoch,
-                                    max_eval_acc,
-                                    max_eval_acc_top5,
-                                    keypoints_model=""
-                                )
-            max_eval_acc = max_eval_acc_new
-            max_eval_acc_top5 = max_eval_acc_top5_new
+                metrics_log, max_eval_acc_new, max_eval_acc_top5_new = self.train_epoch_metrics(self.slrt_model,
+                                        self.train_loader,
+                                        self.val_loader,
+                                        self.eval_loader,
+                                        cel_criterion,
+                                        sgd_optimizer,
+                                        epoch,
+                                        max_eval_acc,
+                                        max_eval_acc_top5,
+                                        keypoints_model=str(self.config['keypoints_model'])
+                                    )
+                max_eval_acc = max_eval_acc_new
+                max_eval_acc_top5 = max_eval_acc_top5_new
+                
+                metrics_log["train_epoch"] = epoch + 1
+
+                if self.use_wandb:
+                    wandb.log(metrics_log)
+                    
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+                        
+            print("finished wandb ")        
             
-            metrics_log["train_epoch"] = epoch + 1
-
-            if self.use_wandb:
-                wandb.log(metrics_log)
-        
         if self.use_wandb:
+            print("Finish wandb ")
+            if self.run !=None:
+
+                path_save_epoch = os.path.join(self.path_save_weights, 'best_model')
+                print("Saving model in ",path_save_epoch)
+                
+                keypoints_model = str(self.config['keypoints_model'])
+                name_file = 'spoter-sl.pth' if keypoints_model=="" else f'spoter-sl-{keypoints_model}.pth'
+                print("log artifact wandb  : ",os.path.join(path_save_epoch, name_file))
+
+                self.model_artifact.add_file(os.path.join(path_save_epoch, name_file))
+                self.run.log_artifact(self.model_artifact)
+
             wandb.finish()
