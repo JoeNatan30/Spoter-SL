@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+os.environ["CUDA_LAUNCH_BLOCKING"] = "0,1"
 
 import argparse
 from utils import parse_arguments_automated, set_seed, configure_model, get_dataset, get_datasets_by_dsname
@@ -9,8 +9,8 @@ import sys
 import wandb
 
 CONFIG_FILENAME = "config.json"
-PROJECT_WANDB = "spoter"
-ENTITY = "joeNatan30"
+PROJECT_WANDB = "cvpr-sign-language-project"
+ENTITY = "ml_projects"
 
 
 def is_there_arg(args, master_arg):
@@ -48,6 +48,7 @@ def train(config_file, arg, use_wandb, exp_name, exp_notes, experimentation, num
     if experimentation:
         print("Training some experiments to numerical experimentation ...")
         dict_train_loader, dict_val_loader, dict_eval_loader, dict_dict_labels_dataset, dict_inv_dict_labels_dataset = get_datasets_by_dsname(config, use_wandb)
+        print(config)
         exp_spoter = ExperimenterSpoter(
             config, 
             use_wandb, 
@@ -68,7 +69,7 @@ def train(config_file, arg, use_wandb, exp_name, exp_notes, experimentation, num
     else:
         print("Normal training")
         train_loader, val_loader, eval_loader, dict_labels_dataset, inv_dict_labels_dataset = get_dataset(config, use_wandb)
-    
+        print(config)
         if use_wandb:
             wandb.init(project=PROJECT_WANDB, entity=ENTITY, config=config, name=exp_name, notes=exp_notes)
             config = wandb.config
@@ -81,6 +82,7 @@ def train(config_file, arg, use_wandb, exp_name, exp_notes, experimentation, num
         except OSError:
             pass
 
+        print(config)
         spoter_trainer = TrainingSpoter(config=config, use_wandb=use_wandb,
                                         path_save_weights=path_save_weights
                                         )

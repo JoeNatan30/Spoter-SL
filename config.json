@@ -1,7 +1,7 @@
 {
     "hparams":{
         "epochs": 3000,
-        "num_backups": 4,
+        "num_backups": 2,
         "keypoints_model": "mediapipe",
         "lr": 0.0005,
         "keypoints_number": 29,
@@ -25,8 +25,8 @@
     },
 
     "seed": 1,
-    "device":[0],
-    "dataset_path": "../ConnectingPoints/split",
+    "device":[0,1],
+    "dataset_path": "../DATASETS",
     
     "weights_trained": "weights_trained",
     "save_weights_path": "./Weights",
