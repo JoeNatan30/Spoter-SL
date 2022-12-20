@@ -76,6 +76,7 @@ class TrainingSpoter():
 
     def save_weights(self, model, path_sub, keypoints_model, use_wandb=True):
         name_file = 'spoter-sl.pth' if keypoints_model=="" else f'spoter-sl-{keypoints_model}.pth'
+        print("torch.save : ",os.path.join(path_sub, name_file))
         torch.save(model.state_dict(), os.path.join(path_sub, name_file))
 
         if use_wandb:
@@ -145,8 +146,25 @@ class TrainingSpoter():
             _, _, eval_acctop5 = evaluate_top_k(slrt_model, eval_loader, self.device, k=5)
             slrt_model.train(True)
 
+            print("eval_acc : ",eval_acc)              
             if eval_acc > max_eval_acc:
                 max_eval_acc = eval_acc
+                
+                print("better results")  
+                print("max_eval_acc : ",max_eval_acc)              
+                path_save_epoch = os.path.join(self.path_save_weights, 'best_model')
+                print("Saving model in ",path_save_epoch)
+                try:
+                    os.mkdir(path_save_epoch)
+                except OSError:
+                    print("error creating path ",path_save_epoch)
+                    pass
+                
+                self.save_weights(slrt_model, path_save_epoch, keypoints_model, self.use_wandb)
+
+
+                
+                
             if eval_acctop5 > max_eval_acc_top5:
                 max_eval_acc_top5 = eval_acctop5
 
@@ -173,10 +191,14 @@ class TrainingSpoter():
         print("self.config['epochs']/self.config['num_backups']+1",self.config['epochs']/self.config['num_backups']+1)
         if ((epoch+1) % int(self.config['epochs']/self.config['num_backups']+1)) == 0:
             path_save_epoch = os.path.join(self.path_save_weights, 'epoch_{}'.format(epoch+1))
+            
+            print("Saving model in ",path_save_epoch)
             try:
                 os.mkdir(path_save_epoch)
             except OSError:
+                print("error creating path ",path_save_epoch)
                 pass
+            
             self.save_weights(slrt_model, path_save_epoch, keypoints_model, self.use_wandb)
 
         return metrics_log, max_eval_acc, max_eval_acc_top5
