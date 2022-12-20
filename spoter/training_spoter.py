@@ -411,7 +411,7 @@ class TrainingSpoter():
                                         epoch,
                                         max_eval_acc,
                                         max_eval_acc_top5,
-                                        keypoints_model=str(self.config['keypoints_model'])
+                                        keypoints_model=""#str(self.config['keypoints_model'])
                                     )
                 max_eval_acc = max_eval_acc_new
                 max_eval_acc_top5 = max_eval_acc_top5_new
@@ -435,7 +435,7 @@ class TrainingSpoter():
                 path_save_epoch = os.path.join(self.path_save_weights, 'best_model')
                 print("Saving model in ",path_save_epoch)
                 
-                keypoints_model = str(self.config['keypoints_model'])
+                keypoints_model = ""#str(self.config['keypoints_model'])
                 name_file = 'spoter-sl.pth' if keypoints_model=="" else f'spoter-sl-{keypoints_model}.pth'
                 print("log artifact wandb  : ",os.path.join(path_save_epoch, name_file))
 
