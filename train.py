@@ -9,8 +9,8 @@ import sys
 import wandb
 
 CONFIG_FILENAME = "config.json"
-PROJECT_WANDB = "cvpr-sign-language-project"
-ENTITY = "ml_projects"
+PROJECT_WANDB = "inference-model-SG"
+ENTITY = "joenatan30"
 
 
 def is_there_arg(args, master_arg):

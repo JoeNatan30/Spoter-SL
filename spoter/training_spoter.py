@@ -20,7 +20,7 @@ NUM_CLASSES = {
     "AEC": 28,
     "PUCP_PSL_DGI156": 29,
     "WLASL": 86,
-    "AEC-DGI156-DGI305":72
+    "AEC-DGI156-DGI305":85
 }
 
 
